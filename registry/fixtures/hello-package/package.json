@@ -1,0 +1,9 @@
+{
+  "name": "official-hello-skill",
+  "version": "1.0.0",
+  "private": true,
+  "files": [
+    "skill.json",
+    "SKILL.md"
+  ]
+}

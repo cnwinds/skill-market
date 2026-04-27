@@ -1,0 +1,18 @@
+{
+  "name": "skill-market",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @qizhi/skill-spec && npm run build --workspace @qizhi/skill-market-server",
+    "import:official": "node scripts/import-official-dist.mjs",
+    "test": "npm run test --workspace @qizhi/skill-spec && npm run test --workspace @qizhi/skill-market-server",
+    "typecheck": "npm run build --workspace @qizhi/skill-spec && npm run typecheck --workspace @qizhi/skill-spec && npm run typecheck --workspace @qizhi/skill-market-server"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

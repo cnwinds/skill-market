@@ -1,0 +1,44 @@
+{
+  "skillSpecVersion": "1.0",
+  "id": "official/zhangxuefeng-perspective",
+  "name": "zhangxuefeng-perspective",
+  "displayName": "Zhang Xuefeng Perspective",
+  "version": "0.1.0",
+  "kind": "instruction",
+  "description": "Instruction skill for analyzing majors, schools, cities, career planning, and mobility from a pragmatic Zhang Xuefeng-style perspective.",
+  "author": {
+    "name": "Qizhi Official"
+  },
+  "license": "Proprietary",
+  "tags": [
+    "education",
+    "career",
+    "gaokao",
+    "perspective"
+  ],
+  "categories": [
+    "education",
+    "advisory"
+  ],
+  "compatibility": {
+    "skillchat": ">=0.2.0"
+  },
+  "permissions": {
+    "filesystem": [],
+    "network": true,
+    "scripts": false,
+    "secrets": []
+  },
+  "runtime": {
+    "type": "none",
+    "entrypoints": []
+  },
+  "starterPrompts": [
+    "Use Zhang Xuefeng's perspective to analyze this major.",
+    "Help me compare school, city, and major choices.",
+    "Analyze this career path with pragmatic education planning."
+  ],
+  "assets": {
+    "screenshots": []
+  }
+}

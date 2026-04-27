@@ -1,0 +1,76 @@
+{
+  "skillSpecVersion": "1.0",
+  "id": "official/xlsx",
+  "name": "xlsx",
+  "displayName": "XLSX",
+  "version": "0.1.0",
+  "kind": "hybrid",
+  "description": "Spreadsheet skill for creating, reading, editing, formatting, recalculating, validating, and converting Excel, CSV, and TSV files.",
+  "author": {
+    "name": "Qizhi Official"
+  },
+  "license": "Proprietary",
+  "tags": [
+    "xlsx",
+    "excel",
+    "spreadsheet",
+    "csv"
+  ],
+  "categories": [
+    "productivity",
+    "data"
+  ],
+  "compatibility": {
+    "skillchat": ">=0.2.0"
+  },
+  "permissions": {
+    "filesystem": [
+      "session:read",
+      "uploads:read",
+      "outputs:read",
+      "outputs:write",
+      "tmp:write"
+    ],
+    "network": false,
+    "scripts": true,
+    "secrets": []
+  },
+  "runtime": {
+    "type": "python",
+    "entrypoints": [
+      {
+        "name": "recalc",
+        "path": "scripts/recalc.py",
+        "description": "Recalculate formulas and report spreadsheet errors."
+      },
+      {
+        "name": "office-pack",
+        "path": "scripts/office/pack.py",
+        "description": "Pack an unpacked Office document directory."
+      },
+      {
+        "name": "office-unpack",
+        "path": "scripts/office/unpack.py",
+        "description": "Unpack an Office document archive."
+      },
+      {
+        "name": "office-validate",
+        "path": "scripts/office/validate.py",
+        "description": "Validate an Office document archive."
+      },
+      {
+        "name": "soffice",
+        "path": "scripts/office/soffice.py",
+        "description": "Run LibreOffice in headless automation workflows."
+      }
+    ]
+  },
+  "starterPrompts": [
+    "Create a formatted spreadsheet from this data.",
+    "Edit this workbook while preserving formulas and formatting.",
+    "Recalculate this Excel file and check for formula errors."
+  ],
+  "assets": {
+    "screenshots": []
+  }
+}

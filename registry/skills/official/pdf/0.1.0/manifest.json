@@ -1,0 +1,91 @@
+{
+  "skillSpecVersion": "1.0",
+  "id": "official/pdf",
+  "name": "pdf",
+  "displayName": "PDF",
+  "version": "0.1.0",
+  "kind": "hybrid",
+  "description": "PDF processing skill for reading, extracting, merging, splitting, rotating, watermarking, creating, OCRing, encrypting, and filling PDF files.",
+  "author": {
+    "name": "Qizhi Official"
+  },
+  "license": "Proprietary",
+  "tags": [
+    "pdf",
+    "documents",
+    "forms",
+    "ocr"
+  ],
+  "categories": [
+    "productivity",
+    "documents"
+  ],
+  "compatibility": {
+    "skillchat": ">=0.2.0"
+  },
+  "permissions": {
+    "filesystem": [
+      "session:read",
+      "uploads:read",
+      "outputs:read",
+      "outputs:write",
+      "tmp:write"
+    ],
+    "network": false,
+    "scripts": true,
+    "secrets": []
+  },
+  "runtime": {
+    "type": "python",
+    "entrypoints": [
+      {
+        "name": "check-bounding-boxes",
+        "path": "scripts/check_bounding_boxes.py",
+        "description": "Check PDF annotation bounding boxes."
+      },
+      {
+        "name": "check-fillable-fields",
+        "path": "scripts/check_fillable_fields.py",
+        "description": "Check whether a PDF contains fillable fields."
+      },
+      {
+        "name": "convert-pdf-to-images",
+        "path": "scripts/convert_pdf_to_images.py",
+        "description": "Convert PDF pages to images."
+      },
+      {
+        "name": "create-validation-image",
+        "path": "scripts/create_validation_image.py",
+        "description": "Create validation images for filled forms."
+      },
+      {
+        "name": "extract-form-field-info",
+        "path": "scripts/extract_form_field_info.py",
+        "description": "Extract form field metadata."
+      },
+      {
+        "name": "extract-form-structure",
+        "path": "scripts/extract_form_structure.py",
+        "description": "Extract PDF form structure."
+      },
+      {
+        "name": "fill-fillable-fields",
+        "path": "scripts/fill_fillable_fields.py",
+        "description": "Fill interactive PDF form fields."
+      },
+      {
+        "name": "fill-pdf-form-with-annotations",
+        "path": "scripts/fill_pdf_form_with_annotations.py",
+        "description": "Fill PDF forms using annotations."
+      }
+    ]
+  },
+  "starterPrompts": [
+    "Extract the text and tables from this PDF.",
+    "Merge these PDFs into one file.",
+    "Fill this PDF form and verify the output."
+  ],
+  "assets": {
+    "screenshots": []
+  }
+}

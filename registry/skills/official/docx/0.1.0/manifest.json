@@ -1,0 +1,81 @@
+{
+  "skillSpecVersion": "1.0",
+  "id": "official/docx",
+  "name": "docx",
+  "displayName": "DOCX",
+  "version": "0.1.0",
+  "kind": "hybrid",
+  "description": "Word document skill for creating, reading, editing, validating, commenting on, and converting .docx files with professional formatting.",
+  "author": {
+    "name": "Qizhi Official"
+  },
+  "license": "Proprietary",
+  "tags": [
+    "docx",
+    "word",
+    "documents",
+    "comments"
+  ],
+  "categories": [
+    "productivity",
+    "documents"
+  ],
+  "compatibility": {
+    "skillchat": ">=0.2.0"
+  },
+  "permissions": {
+    "filesystem": [
+      "session:read",
+      "uploads:read",
+      "outputs:read",
+      "outputs:write",
+      "tmp:write"
+    ],
+    "network": false,
+    "scripts": true,
+    "secrets": []
+  },
+  "runtime": {
+    "type": "python",
+    "entrypoints": [
+      {
+        "name": "accept-changes",
+        "path": "scripts/accept_changes.py",
+        "description": "Accept tracked changes in a DOCX file."
+      },
+      {
+        "name": "comment",
+        "path": "scripts/comment.py",
+        "description": "Add Word comments to an unpacked DOCX."
+      },
+      {
+        "name": "office-pack",
+        "path": "scripts/office/pack.py",
+        "description": "Pack an unpacked Office document directory."
+      },
+      {
+        "name": "office-unpack",
+        "path": "scripts/office/unpack.py",
+        "description": "Unpack an Office document archive."
+      },
+      {
+        "name": "office-validate",
+        "path": "scripts/office/validate.py",
+        "description": "Validate an Office document archive."
+      },
+      {
+        "name": "soffice",
+        "path": "scripts/office/soffice.py",
+        "description": "Run LibreOffice in headless automation workflows."
+      }
+    ]
+  },
+  "starterPrompts": [
+    "Create a polished Word document from this outline.",
+    "Edit this DOCX while preserving tracked changes.",
+    "Add comments to this Word document."
+  ],
+  "assets": {
+    "screenshots": []
+  }
+}
