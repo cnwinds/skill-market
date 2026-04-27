@@ -55,6 +55,53 @@ npm run typecheck
 npm test
 ```
 
+## Docker 启动
+
+构建并后台启动：
+
+```bash
+npm run docker:up
+```
+
+查看日志：
+
+```bash
+npm run docker:logs
+```
+
+停止：
+
+```bash
+npm run docker:down
+```
+
+默认监听：
+
+```text
+http://localhost:3100
+```
+
+健康检查：
+
+```bash
+curl http://localhost:3100/health
+curl http://localhost:3100/api/v1/skills
+```
+
+`compose.yml` 会把本地 `registry/` 只读挂载到容器内，并设置 `REGISTRY_ROOT=/app/registry`。后续从 `official-skills` 重新导入包后，重启容器即可让 Market API 读取最新 registry。
+
+SkillChat 连接本服务时，在 `skill-chat` 的 `.env` 中配置：
+
+```env
+MARKET_BASE_URL=http://localhost:3100
+```
+
+如果 SkillChat 也放进同一个 Docker network，地址应改为：
+
+```env
+MARKET_BASE_URL=http://skill-market:3100
+```
+
 从 `official-skills/dist` 导入官方打包产物：
 
 ```bash

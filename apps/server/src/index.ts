@@ -2,8 +2,9 @@ import { createApp } from './app.js';
 
 const port = Number(process.env.PORT ?? 3100);
 const host = process.env.HOST ?? '127.0.0.1';
+const registryRoot = process.env.REGISTRY_ROOT;
 
-const app = createApp({ logger: true });
+const app = createApp({ logger: true, registryRoot });
 
 try {
   await app.listen({ port, host });

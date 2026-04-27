@@ -1,0 +1,29 @@
+services:
+  skill-market:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cnwinds/skill-market:local
+    container_name: skill-market
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3100
+      NODE_ENV: production
+      REGISTRY_ROOT: /app/registry
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./registry:/app/registry:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3100/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
