@@ -5,6 +5,7 @@ services:
       dockerfile: docker/Dockerfile
     image: cnwinds/skill-market-server:local
     container_name: skill-market-server
+    user: "0:0"
     restart: unless-stopped
     environment:
       HOST: 0.0.0.0
