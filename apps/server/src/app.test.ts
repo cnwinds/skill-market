@@ -193,3 +193,184 @@ test('publisher can upload zip package and admin can approve it', async () => {
     await removeRegistryFixture(packageFixture.root);
   }
 });
+
+test('publisher can edit a skill, create a dev release, and download it with a developer key', async () => {
+  const registryRoot = await makeRegistryFixture();
+  const packageFixture = await makePackageFixture('tgz', {
+    id: 'alice/edit-skill',
+    name: 'edit-skill',
+    displayName: 'Editable Skill',
+  });
+  const app = createApp({ registryRoot });
+
+  try {
+    const register = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/register',
+      headers: { 'content-type': 'application/json' },
+      payload: {
+        email: 'alice-editor@example.com',
+        password: 'password123',
+        displayName: 'Alice Editor',
+        publisher: 'alice',
+      },
+    });
+    assert.equal(register.statusCode, 201);
+    const token = register.json().token as string;
+
+    const multipart = await multipartPayload({
+      filePath: packageFixture.filePath,
+      filename: packageFixture.filename,
+      contentType: 'application/gzip',
+    });
+    const upload = await app.inject({
+      method: 'POST',
+      url: '/api/v1/publisher/submissions',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': multipart.contentType,
+      },
+      payload: multipart.payload,
+    });
+    assert.equal(upload.statusCode, 201, upload.body);
+    const submissionId = upload.json().submission.id;
+
+    const submit = await app.inject({
+      method: 'POST',
+      url: `/api/v1/publisher/submissions/${submissionId}/submit`,
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      payload: {},
+    });
+    assert.equal(submit.statusCode, 200, submit.body);
+
+    const approve = await app.inject({
+      method: 'POST',
+      url: `/api/v1/admin/reviews/${submissionId}/approve`,
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      payload: { reason: 'Initial release.' },
+    });
+    assert.equal(approve.statusCode, 200, approve.body);
+
+    const createWorkspace = await app.inject({
+      method: 'POST',
+      url: '/api/v1/publisher/skills/alice/edit-skill/edit-workspaces',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      payload: { sourceVersion: '1.0.0' },
+    });
+    assert.equal(createWorkspace.statusCode, 201, createWorkspace.body);
+    const workspace = createWorkspace.json().workspace;
+    assert.equal(workspace.targetVersion, '1.0.1');
+
+    const fileList = await app.inject({
+      method: 'GET',
+      url: `/api/v1/publisher/edit-workspaces/${workspace.id}/files`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    assert.equal(fileList.statusCode, 200, fileList.body);
+    assert.equal(fileList.json().entries.some((entry: { path: string }) => entry.path === 'SKILL.md'), true);
+
+    const manifestFile = await app.inject({
+      method: 'GET',
+      url: `/api/v1/publisher/edit-workspaces/${workspace.id}/files/content?path=skill.json`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    assert.equal(manifestFile.statusCode, 200, manifestFile.body);
+    assert.equal(JSON.parse(manifestFile.json().content).version, '1.0.1');
+
+    const editReadme = await app.inject({
+      method: 'PUT',
+      url: `/api/v1/publisher/edit-workspaces/${workspace.id}/files/content`,
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      payload: {
+        path: 'SKILL.md',
+        content: '# Editable Skill\n\nDevelopment content.\n',
+        baseRevision: workspace.revision,
+      },
+    });
+    assert.equal(editReadme.statusCode, 200, editReadme.body);
+    assert.equal(editReadme.json().workspace.revision, workspace.revision + 1);
+
+    const validate = await app.inject({
+      method: 'POST',
+      url: `/api/v1/publisher/edit-workspaces/${workspace.id}/validate`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    assert.equal(validate.statusCode, 200, validate.body);
+    assert.equal(validate.json().validation.valid, true);
+
+    const createKey = await app.inject({
+      method: 'POST',
+      url: '/api/v1/publisher/dev-keys',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      payload: {
+        name: 'Local SkillChat',
+        skillId: 'alice/edit-skill',
+      },
+    });
+    assert.equal(createKey.statusCode, 201, createKey.body);
+    const developerKey = createKey.json().developerKey;
+    assert.match(developerKey.secret, /^skdev_/);
+
+    const listKeys = await app.inject({
+      method: 'GET',
+      url: '/api/v1/publisher/dev-keys?skillId=alice/edit-skill',
+      headers: { authorization: `Bearer ${token}` },
+    });
+    assert.equal(listKeys.statusCode, 200, listKeys.body);
+    assert.equal(listKeys.json().developerKeys[0].secret, developerKey.secret);
+
+    const createDev = await app.inject({
+      method: 'POST',
+      url: `/api/v1/publisher/edit-workspaces/${workspace.id}/dev-releases`,
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      payload: {},
+    });
+    assert.equal(createDev.statusCode, 201, createDev.body);
+    assert.equal(createDev.json().devRelease.version, '1.0.1');
+
+    const devManifestNoKey = await app.inject('/api/v1/dev/skills/alice/edit-skill/versions/dev/manifest');
+    assert.equal(devManifestNoKey.statusCode, 401);
+
+    const devManifest = await app.inject({
+      method: 'GET',
+      url: '/api/v1/dev/skills/alice/edit-skill/versions/dev/manifest',
+      headers: { 'x-skill-dev-key': developerKey.secret },
+    });
+    assert.equal(devManifest.statusCode, 200, devManifest.body);
+    assert.equal(devManifest.json().id, 'alice/edit-skill');
+    assert.equal(devManifest.json().version, '1.0.1');
+
+    const devPackage = await app.inject({
+      method: 'GET',
+      url: '/api/v1/dev/skills/alice/edit-skill/versions/dev/package',
+      headers: { 'x-skill-dev-key': developerKey.secret },
+    });
+    assert.equal(devPackage.statusCode, 200, devPackage.body);
+    assert.equal(devPackage.headers['x-skill-channel'], 'dev');
+    assert.equal(devPackage.headers['x-skill-version'], '1.0.1');
+
+    const publicVersions = await app.inject('/api/v1/skills/alice/edit-skill/versions');
+    assert.equal(publicVersions.statusCode, 200, publicVersions.body);
+    assert.deepEqual(
+      publicVersions.json().versions.map((version: { version: string }) => version.version),
+      ['1.0.0'],
+    );
+
+    const revokeKey = await app.inject({
+      method: 'POST',
+      url: `/api/v1/publisher/dev-keys/${developerKey.id}/revoke`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+    assert.equal(revokeKey.statusCode, 200, revokeKey.body);
+
+    const revokedPackage = await app.inject({
+      method: 'GET',
+      url: '/api/v1/dev/skills/alice/edit-skill/versions/dev/package',
+      headers: { 'x-skill-dev-key': developerKey.secret },
+    });
+    assert.equal(revokedPackage.statusCode, 403);
+  } finally {
+    await removeRegistryFixture(registryRoot);
+    await removeRegistryFixture(packageFixture.root);
+  }
+});

@@ -5,6 +5,7 @@ import ErrorState from '../../components/ErrorState';
 import PermissionBadge from '../../components/PermissionBadge';
 import KindBadge from '../../components/KindBadge';
 import JsonViewer from '../../components/JsonViewer';
+import { useAuth } from '../auth/useAuth';
 
 type Tab = 'overview' | 'permissions' | 'versions' | 'manifest';
 
@@ -18,6 +19,7 @@ const TABS: { id: Tab; label: string }[] = [
 export default function SkillDetailPage() {
   const { publisher, name } = useParams<{ publisher: string; name: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
   const tab = (searchParams.get('tab') as Tab) ?? 'overview';
 
   const { data: skill, isLoading, isError, refetch } = useQuery({
@@ -58,6 +60,7 @@ export default function SkillDetailPage() {
   const packageUrl = latest
     ? skillsApi.packageUrl(publisher!, name!, latest.version)
     : null;
+  const canEdit = Boolean(user && publisher && (user.roles.includes('admin') || user.publishers.includes(publisher)));
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -118,6 +121,14 @@ export default function SkillDetailPage() {
           </div>
 
           <div className="flex flex-col gap-2 shrink-0">
+            {canEdit && (
+              <Link
+                to={`/publisher/skills/${publisher}/${name}/edit`}
+                className="flex items-center gap-2 text-sm border border-blue-300 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                编辑
+              </Link>
+            )}
             {packageUrl && (
               <a
                 href={packageUrl}

@@ -309,6 +309,288 @@ Response:
 `skill` is `marketSkillDetailSchema | null`.
 `submissions[]` matches `marketSubmissionSchema`.
 
+### POST /publisher/skills/{publisher}/{name}/edit-workspaces
+
+Creates an editable workspace from a published version. The caller must be an owner of the publisher or an admin.
+
+Request:
+
+```json
+{
+  "sourceVersion": "1.0.0",
+  "targetVersion": "1.0.1"
+}
+```
+
+Both fields are optional. `sourceVersion` defaults to the latest public version. `targetVersion` defaults to a patch bump of the source version. The server updates the unpacked manifest version to `targetVersion`.
+
+Response matches `marketEditWorkspaceResponseSchema`.
+
+### GET /publisher/edit-workspaces
+
+Query:
+
+```text
+skillId?: publisher/name
+status?: draft | validating | ready | submitted | published | discarded
+```
+
+Returns workspaces accessible to the current user:
+
+```json
+{
+  "workspaces": []
+}
+```
+
+Each item matches `marketEditWorkspaceSchema`.
+
+### GET /publisher/edit-workspaces/{workspaceId}
+
+Returns one workspace matching `marketEditWorkspaceResponseSchema`.
+
+### PATCH /publisher/edit-workspaces/{workspaceId}
+
+Updates workspace metadata.
+
+```json
+{
+  "targetVersion": "1.0.2",
+  "baseRevision": 3
+}
+```
+
+Returns `marketEditWorkspaceResponseSchema`. Stale `baseRevision` returns `409`.
+
+### GET /publisher/edit-workspaces/{workspaceId}/files
+
+Query:
+
+```text
+path?: directory path
+```
+
+Returns direct children of the directory and the current workspace revision:
+
+```json
+{
+  "path": "",
+  "entries": [],
+  "revision": 1
+}
+```
+
+`entries[]` matches `marketWorkspaceFileEntrySchema`.
+
+### GET /publisher/edit-workspaces/{workspaceId}/files/content
+
+Query:
+
+```text
+path: file path
+```
+
+Returns UTF-8 text file content. Binary files return an error.
+
+### GET /publisher/edit-workspaces/{workspaceId}/files/download
+
+Downloads one workspace file. Requires auth and workspace access.
+
+### PUT /publisher/edit-workspaces/{workspaceId}/files/content
+
+Writes a UTF-8 text file:
+
+```json
+{
+  "path": "SKILL.md",
+  "content": "# Example\n",
+  "baseRevision": 1
+}
+```
+
+Returns `marketEditWorkspaceResponseSchema`.
+
+### POST /publisher/edit-workspaces/{workspaceId}/files
+
+Creates a file or directory:
+
+```json
+{
+  "path": "docs/usage.md",
+  "kind": "file",
+  "content": "",
+  "baseRevision": 2
+}
+```
+
+### POST /publisher/edit-workspaces/{workspaceId}/files/upload
+
+Uploads a binary file into the workspace.
+
+Content type:
+
+```text
+multipart/form-data
+```
+
+Fields:
+
+```text
+path: assets/icon.png
+baseRevision: 3
+file: binary file
+```
+
+### PATCH /publisher/edit-workspaces/{workspaceId}/files/move
+
+Moves or renames a workspace file or directory.
+
+```json
+{
+  "from": "old.md",
+  "to": "docs/new.md",
+  "baseRevision": 4
+}
+```
+
+### DELETE /publisher/edit-workspaces/{workspaceId}/files
+
+Query:
+
+```text
+path: file or directory path
+baseRevision: number
+```
+
+Returns `marketEditWorkspaceResponseSchema`.
+
+### POST /publisher/edit-workspaces/{workspaceId}/validate
+
+Packs the current workspace into a temporary `.tgz`, validates it with the same package validator used by uploads, and stores the result on the workspace.
+
+Response:
+
+```json
+{
+  "workspace": {},
+  "validation": {},
+  "manifest": {},
+  "fileEntries": []
+}
+```
+
+### POST /publisher/edit-workspaces/{workspaceId}/submit
+
+Validates and submits the workspace package for review.
+
+```json
+{
+  "releaseNotes": "Release notes",
+  "changeNotes": "Change notes"
+}
+```
+
+Returns `marketSubmissionResponseSchema`.
+
+### GET /publisher/edit-workspaces/{workspaceId}/dev-releases
+
+Returns development versions generated from the workspace:
+
+```json
+{
+  "devReleases": []
+}
+```
+
+Each item matches `marketDevReleaseSchema`.
+
+### POST /publisher/edit-workspaces/{workspaceId}/dev-releases
+
+Validates the workspace and creates a private development release. Development releases do not appear in public skill APIs.
+
+```json
+{
+  "version": "1.0.1-dev.1",
+  "label": "local test",
+  "expiresAt": "2026-05-28T00:00:00.000Z"
+}
+```
+
+`version` is optional and defaults to the workspace `targetVersion`. `expiresAt` defaults to 30 days after creation.
+
+### POST /publisher/dev-keys
+
+Creates a developer key for testing development releases.
+
+```json
+{
+  "name": "Local SkillChat",
+  "skillId": "alice/example",
+  "expiresAt": "2026-05-28T00:00:00.000Z"
+}
+```
+
+Response matches `marketDeveloperKeyResponseSchema`. The `secret` field can be viewed again later by the skill owner or an admin.
+
+### GET /publisher/dev-keys
+
+Query:
+
+```text
+skillId?: publisher/name
+```
+
+Returns developer keys accessible to the current user, including their `secret` values.
+
+### POST /publisher/dev-keys/{keyId}/revoke
+
+Revokes a developer key. Revoked keys can no longer download development releases.
+
+### POST /publisher/dev-releases/{devReleaseId}/revoke
+
+Revokes a development release.
+
+```json
+{
+  "reason": "superseded"
+}
+```
+
+## Development Download
+
+Development download endpoints do not use login bearer tokens. Clients must send:
+
+```text
+X-Skill-Dev-Key: skdev_...
+```
+
+The key must be active, unexpired, include `dev:read`, and match the requested skill scope.
+
+### GET /dev/skills/{publisher}/{name}
+
+Returns active development releases for a skill.
+
+### GET /dev/skills/{publisher}/{name}/versions
+
+Returns active development releases for a skill.
+
+### GET /dev/skills/{publisher}/{name}/versions/{version}/manifest
+
+Returns the development release manifest. `{version}` may be a concrete dev version, `dev`, or `latest-dev`.
+
+### GET /dev/skills/{publisher}/{name}/versions/{version}/package
+
+Downloads the development release package. `{version}` may be a concrete dev version, `dev`, or `latest-dev`.
+
+Headers include:
+
+```text
+X-Skill-Id: publisher/name
+X-Skill-Version: <resolved version>
+X-Skill-Sha256: <hex>
+X-Skill-Channel: dev
+```
+
 ## Admin
 
 All admin endpoints require an authenticated user with `admin` role.
@@ -326,6 +608,20 @@ Defaults to `pending_review`.
 ### GET /admin/reviews/{submissionId}
 
 Returns one submission for review.
+
+### POST /admin/edit-workspaces/{workspaceId}/publish
+
+Validates an editor workspace and publishes it directly into the public registry. Admin only.
+
+```json
+{
+  "releaseNotes": "Release notes",
+  "changeNotes": "Change notes",
+  "reason": "Reviewed by admin"
+}
+```
+
+Returns `marketSubmissionResponseSchema`.
 
 ### POST /admin/reviews/{submissionId}/approve
 

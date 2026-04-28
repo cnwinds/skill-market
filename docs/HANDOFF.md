@@ -44,6 +44,17 @@ registry/
 
 `market.json` stores users, bearer sessions, submissions, audit logs, and featured Skill ids. `uploads/` stores draft package uploads.
 
+Online editor data also lives under `market-data`:
+
+```text
+registry/
+  market-data/
+    edit-workspaces/
+    dev-releases/
+```
+
+`market.json` stores editor workspace metadata, development release metadata, and developer keys. Developer keys are intentionally viewable again by Skill owners/admins in the current MVP, so `market.json` stores both the displayed `secret` and a `keyHash` used for download request validation.
+
 When running through Docker Compose, the host-side registry path is:
 
 ```text
@@ -134,6 +145,26 @@ POST   /api/v1/publisher/submissions/:submissionId/withdraw
 DELETE /api/v1/publisher/submissions/:submissionId
 GET    /api/v1/publisher/skills
 GET    /api/v1/publisher/skills/:publisher/:name
+POST   /api/v1/publisher/skills/:publisher/:name/edit-workspaces
+GET    /api/v1/publisher/edit-workspaces
+GET    /api/v1/publisher/edit-workspaces/:workspaceId
+PATCH  /api/v1/publisher/edit-workspaces/:workspaceId
+GET    /api/v1/publisher/edit-workspaces/:workspaceId/files
+GET    /api/v1/publisher/edit-workspaces/:workspaceId/files/content
+GET    /api/v1/publisher/edit-workspaces/:workspaceId/files/download
+PUT    /api/v1/publisher/edit-workspaces/:workspaceId/files/content
+POST   /api/v1/publisher/edit-workspaces/:workspaceId/files
+POST   /api/v1/publisher/edit-workspaces/:workspaceId/files/upload
+PATCH  /api/v1/publisher/edit-workspaces/:workspaceId/files/move
+DELETE /api/v1/publisher/edit-workspaces/:workspaceId/files
+POST   /api/v1/publisher/edit-workspaces/:workspaceId/validate
+POST   /api/v1/publisher/edit-workspaces/:workspaceId/submit
+GET    /api/v1/publisher/edit-workspaces/:workspaceId/dev-releases
+POST   /api/v1/publisher/edit-workspaces/:workspaceId/dev-releases
+POST   /api/v1/publisher/dev-keys
+GET    /api/v1/publisher/dev-keys
+POST   /api/v1/publisher/dev-keys/:keyId/revoke
+POST   /api/v1/publisher/dev-releases/:devReleaseId/revoke
 ```
 
 `POST /api/v1/publisher/submissions` uses `multipart/form-data`:
@@ -149,6 +180,7 @@ changeNotes?: string
 ```text
 GET  /api/v1/admin/reviews
 GET  /api/v1/admin/reviews/:submissionId
+POST /api/v1/admin/edit-workspaces/:workspaceId/publish
 POST /api/v1/admin/reviews/:submissionId/approve
 POST /api/v1/admin/reviews/:submissionId/reject
 POST /api/v1/admin/skills/:publisher/:name/versions/:version/remove
@@ -158,6 +190,25 @@ POST /api/v1/admin/skills/:publisher/:name/unfeature
 ```
 
 Approve writes the normalized manifest and original package into the public registry. Reject and remove require a reason.
+
+## Development Download API
+
+Development releases are private test builds generated from editor workspaces. They do not appear in public Skill list/detail/version APIs. Usage clients download them with:
+
+```text
+X-Skill-Dev-Key: skdev_...
+```
+
+Routes:
+
+```text
+GET /api/v1/dev/skills/:publisher/:name
+GET /api/v1/dev/skills/:publisher/:name/versions
+GET /api/v1/dev/skills/:publisher/:name/versions/:version/manifest
+GET /api/v1/dev/skills/:publisher/:name/versions/:version/package
+```
+
+`:version` can be a concrete development version, `dev`, or `latest-dev`.
 
 ## Running
 
@@ -218,6 +269,7 @@ Current tests cover:
 - Public registry scan/detail/versions/manifest/package APIs.
 - `.tgz` and `.zip` package validation.
 - Register, upload zip package, submit review, admin approve, public detail, and public zip package download.
+- Editor workspace creation, text editing, validation, development release generation, developer key listing, dev package download, and key revocation.
 
 Full endpoint details are in `docs/market-api.md`.
 

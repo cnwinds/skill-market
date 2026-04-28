@@ -245,6 +245,119 @@ export const marketSubmissionListQuerySchema = z.object({
   status: marketSubmissionStatusSchema.optional(),
 });
 
+export const marketEditWorkspaceStatusSchema = z.enum([
+  'draft',
+  'validating',
+  'ready',
+  'submitted',
+  'published',
+  'discarded',
+]);
+
+export const marketEditWorkspaceSchema = z.object({
+  id: z.string().min(1),
+  status: marketEditWorkspaceStatusSchema,
+  skillId: skillIdSchema,
+  publisher: skillNameSchema,
+  name: skillNameSchema,
+  sourceVersion: semverSchema,
+  targetVersion: semverSchema,
+  revision: z.number().int().nonnegative(),
+  validation: marketPackageValidationSchema.optional(),
+  fileEntries: z.array(marketPackageFileEntrySchema).default([]),
+  latestBuildId: z.string().optional(),
+  devReleaseIds: z.array(z.string()).default([]),
+  submissionId: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  lastValidatedAt: z.string().optional(),
+  discardedAt: z.string().optional(),
+});
+
+export const marketEditWorkspaceResponseSchema = z.object({
+  workspace: marketEditWorkspaceSchema,
+});
+
+export const marketEditWorkspaceListResponseSchema = z.object({
+  workspaces: z.array(marketEditWorkspaceSchema),
+});
+
+export const marketWorkspaceFileEntrySchema = z.object({
+  path: z.string(),
+  name: z.string().min(1),
+  kind: z.enum(['file', 'directory']),
+  sizeBytes: z.number().int().nonnegative().optional(),
+  contentType: z.string().optional(),
+  editable: z.boolean().default(false),
+  updatedAt: z.string(),
+});
+
+export const marketWorkspaceFileListResponseSchema = z.object({
+  path: z.string(),
+  entries: z.array(marketWorkspaceFileEntrySchema),
+  revision: z.number().int().nonnegative(),
+});
+
+export const marketWorkspaceFileContentResponseSchema = z.object({
+  path: z.string().min(1),
+  encoding: z.literal('utf8'),
+  content: z.string(),
+  revision: z.number().int().nonnegative(),
+});
+
+export const marketDevReleaseStatusSchema = z.enum(['active', 'revoked', 'expired']);
+
+export const marketDevReleaseSchema = z.object({
+  id: z.string().min(1),
+  status: marketDevReleaseStatusSchema,
+  skillId: skillIdSchema,
+  publisher: skillNameSchema,
+  name: skillNameSchema,
+  version: semverSchema,
+  sourceWorkspaceId: z.string().min(1),
+  sourceVersion: semverSchema,
+  package: marketPackageInfoSchema,
+  packageUrl: z.string(),
+  validation: marketPackageValidationSchema,
+  fileEntries: z.array(marketPackageFileEntrySchema).default([]),
+  createdBy: z.string().min(1),
+  createdAt: z.string(),
+  expiresAt: z.string().optional(),
+  revokedAt: z.string().optional(),
+  revokeReason: z.string().optional(),
+});
+
+export const marketDevReleaseResponseSchema = z.object({
+  devRelease: marketDevReleaseSchema,
+  latestDevVersion: semverSchema.optional(),
+});
+
+export const marketDevReleaseListResponseSchema = z.object({
+  devReleases: z.array(marketDevReleaseSchema),
+});
+
+export const marketDeveloperKeySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  secret: z.string().min(1),
+  scopes: z.array(z.enum(['dev:read'])).default(['dev:read']),
+  publisher: skillNameSchema.optional(),
+  skillId: skillIdSchema.optional(),
+  createdBy: z.string().min(1),
+  createdAt: z.string(),
+  expiresAt: z.string().optional(),
+  revokedAt: z.string().optional(),
+  lastUsedAt: z.string().optional(),
+});
+
+export const marketDeveloperKeyResponseSchema = z.object({
+  developerKey: marketDeveloperKeySchema,
+});
+
+export const marketDeveloperKeyListResponseSchema = z.object({
+  developerKeys: z.array(marketDeveloperKeySchema),
+});
+
 export const marketPublisherSkillsResponseSchema = z.object({
   skills: z.array(marketSkillSummarySchema),
   submissions: z.array(marketSubmissionSchema),
@@ -303,6 +416,20 @@ export type MarketSubmission = z.infer<typeof marketSubmissionSchema>;
 export type MarketSubmissionListResponse = z.infer<typeof marketSubmissionListResponseSchema>;
 export type MarketSubmissionResponse = z.infer<typeof marketSubmissionResponseSchema>;
 export type MarketSubmissionListQuery = z.infer<typeof marketSubmissionListQuerySchema>;
+export type MarketEditWorkspaceStatus = z.infer<typeof marketEditWorkspaceStatusSchema>;
+export type MarketEditWorkspace = z.infer<typeof marketEditWorkspaceSchema>;
+export type MarketEditWorkspaceResponse = z.infer<typeof marketEditWorkspaceResponseSchema>;
+export type MarketEditWorkspaceListResponse = z.infer<typeof marketEditWorkspaceListResponseSchema>;
+export type MarketWorkspaceFileEntry = z.infer<typeof marketWorkspaceFileEntrySchema>;
+export type MarketWorkspaceFileListResponse = z.infer<typeof marketWorkspaceFileListResponseSchema>;
+export type MarketWorkspaceFileContentResponse = z.infer<typeof marketWorkspaceFileContentResponseSchema>;
+export type MarketDevReleaseStatus = z.infer<typeof marketDevReleaseStatusSchema>;
+export type MarketDevRelease = z.infer<typeof marketDevReleaseSchema>;
+export type MarketDevReleaseResponse = z.infer<typeof marketDevReleaseResponseSchema>;
+export type MarketDevReleaseListResponse = z.infer<typeof marketDevReleaseListResponseSchema>;
+export type MarketDeveloperKey = z.infer<typeof marketDeveloperKeySchema>;
+export type MarketDeveloperKeyResponse = z.infer<typeof marketDeveloperKeyResponseSchema>;
+export type MarketDeveloperKeyListResponse = z.infer<typeof marketDeveloperKeyListResponseSchema>;
 export type MarketPublisherSkillsResponse = z.infer<typeof marketPublisherSkillsResponseSchema>;
 export type MarketPublisherSkillResponse = z.infer<typeof marketPublisherSkillResponseSchema>;
 export type MarketAuthResponse = z.infer<typeof marketAuthResponseSchema>;

@@ -10,6 +10,8 @@ import PublishPage from '../features/publisher/PublishPage';
 import PublisherLayout from '../features/publisher/PublisherLayout';
 import MySkillsPage from '../features/publisher/MySkillsPage';
 import SubmissionPage from '../features/publisher/SubmissionPage';
+import CreateWorkspacePage from '../features/editor/CreateWorkspacePage';
+import SkillEditorPage from '../features/editor/SkillEditorPage';
 import AdminLayout from '../features/admin/AdminLayout';
 import ReviewQueuePage from '../features/admin/ReviewQueuePage';
 import ReviewDetailPage from '../features/admin/ReviewDetailPage';
@@ -38,6 +40,23 @@ export default function AppRouter() {
             element={
               <RequireAuth>
                 <PublishPage />
+              </RequireAuth>
+            }
+          />
+
+          <Route
+            path="publisher/skills/:publisher/:name/edit"
+            element={
+              <RequireAuth>
+                <CreateWorkspacePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="publisher/edit-workspaces/:id"
+            element={
+              <RequireAuth>
+                <SkillEditorPage />
               </RequireAuth>
             }
           />

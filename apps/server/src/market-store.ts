@@ -5,6 +5,9 @@ import { promisify } from 'node:util';
 
 import {
   type MarketAuthUser,
+  type MarketDevRelease,
+  type MarketDeveloperKey,
+  type MarketEditWorkspace,
   type MarketPackageFileEntry,
   type MarketPackageInfo,
   type MarketPackageValidation,
@@ -36,6 +39,20 @@ export type StoredSubmission = Omit<MarketSubmission, 'user'> & {
   packagePath?: string;
 };
 
+export type StoredEditWorkspace = MarketEditWorkspace & {
+  ownerUserId: string;
+  rootPath: string;
+};
+
+export type StoredDevRelease = MarketDevRelease & {
+  packagePath: string;
+  manifestPath: string;
+};
+
+export type StoredDeveloperKey = MarketDeveloperKey & {
+  keyHash: string;
+};
+
 export type AuditLogEntry = {
   id: string;
   actorUserId: string;
@@ -50,6 +67,9 @@ export type MarketData = {
   users: StoredUser[];
   sessions: StoredSession[];
   submissions: StoredSubmission[];
+  editWorkspaces: StoredEditWorkspace[];
+  devReleases: StoredDevRelease[];
+  developerKeys: StoredDeveloperKey[];
   featuredSkillIds: string[];
   auditLogs: AuditLogEntry[];
 };
@@ -69,6 +89,9 @@ const emptyData = (): MarketData => ({
   users: [],
   sessions: [],
   submissions: [],
+  editWorkspaces: [],
+  devReleases: [],
+  developerKeys: [],
   featuredSkillIds: [],
   auditLogs: [],
 });
@@ -86,6 +109,9 @@ const normalizeData = (input: Partial<MarketData>): MarketData => ({
   users: input.users ?? [],
   sessions: input.sessions ?? [],
   submissions: input.submissions ?? [],
+  editWorkspaces: input.editWorkspaces ?? [],
+  devReleases: input.devReleases ?? [],
+  developerKeys: input.developerKeys ?? [],
   featuredSkillIds: input.featuredSkillIds ?? [],
   auditLogs: input.auditLogs ?? [],
 });
@@ -400,3 +426,5 @@ export const canPublishFor = (user: MarketAuthUser, publisher: string | undefine
   }
   return user.roles.includes('admin') || user.publishers.includes(publisher);
 };
+
+export const hashDeveloperKey = (secret: string): string => sha256(secret);
