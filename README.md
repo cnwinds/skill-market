@@ -85,7 +85,7 @@ Docker runtime data lands in:
 docker/data/registry
 ```
 
-Compose mounts `docker/data/registry` into the container as `/app/registry`. On first startup, the backend entrypoint copies the image's bundled `registry/skills` seed into `docker/data/registry/skills`. Users, sessions, uploads, reviews, published packages, featured markers, and removed markers are persisted under `docker/data/registry`.
+Compose mounts `docker/data/registry` into the container as the writable `/app/registry` runtime registry, and mounts the repository `registry` directory read-only as `/app/registry-seed`. On startup, the backend entrypoint copies `/app/registry-seed/skills` into `docker/data/registry/skills` when the mounted `skills` directory is missing or empty. Users, sessions, uploads, reviews, published packages, featured markers, and removed markers are persisted under `docker/data/registry`.
 
 Equivalent Compose command:
 

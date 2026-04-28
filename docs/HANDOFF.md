@@ -50,7 +50,7 @@ When running through Docker Compose, the host-side registry path is:
 docker/data/registry/
 ```
 
-Compose mounts it into the container as `/app/registry`. The image includes a registry seed copied from the repository `registry/` directory; on first startup, `docker/entrypoint.sh` copies `skills/` into `docker/data/registry/skills` if the mounted registry is empty.
+Compose mounts it into the container as the writable `/app/registry` runtime registry. Compose also mounts the repository `registry/` directory read-only as `/app/registry-seed`; on startup, `docker/entrypoint.sh` copies `/app/registry-seed/skills` into `docker/data/registry/skills` if the mounted `skills` directory is missing or empty.
 
 ## Package Upload
 

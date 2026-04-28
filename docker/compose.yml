@@ -14,6 +14,7 @@ services:
       REGISTRY_SEED_ROOT: /app/registry-seed
     volumes:
       - ./data/registry:/app/registry
+      - ../registry:/app/registry-seed:ro
     healthcheck:
       test:
         [

@@ -26,8 +26,15 @@ This directory is mounted into the container as:
 /app/registry
 ```
 
-On first container startup, `entrypoint.sh` seeds `docker/data/registry/skills`
-from the image's bundled `registry/skills` if the mounted registry is empty.
+The repository `registry` directory is also mounted read-only as:
+
+```text
+/app/registry-seed
+```
+
+On container startup, `entrypoint.sh` seeds `docker/data/registry/skills`
+from `/app/registry-seed/skills` if the mounted `skills` directory is missing
+or empty. Do not mount an empty host `skills` directory over the seed path.
 After that, uploaded submissions, users, sessions, audit logs, review results,
 published packages, and removed markers are all persisted under
 `docker/data/registry`.
