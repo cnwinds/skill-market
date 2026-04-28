@@ -4,9 +4,11 @@ Docker-related files live in this directory.
 
 ```text
 docker/
-  Dockerfile
+  Dockerfile              Backend API image
+  web.Dockerfile          Frontend static/Nginx image
   Dockerfile.dockerignore
   compose.yml
+  nginx.conf
   entrypoint.sh
   data/
     registry/
@@ -44,6 +46,15 @@ Equivalent Compose command:
 ```powershell
 docker compose -f docker/compose.yml up -d --build
 ```
+
+Compose starts two containers:
+
+```text
+skill-market-server  Fastify API, exposed on http://localhost:3100
+skill-market-web     Nginx frontend, exposed on http://localhost:8080
+```
+
+The web container proxies `/api/*` and `/health` to `skill-market-server:3100`.
 
 To reset all Docker runtime data, stop the service and remove the contents of
 `docker/data/registry`.
