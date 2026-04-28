@@ -12,8 +12,6 @@ services:
       NODE_ENV: production
       REGISTRY_ROOT: /app/registry
       REGISTRY_SEED_ROOT: /app/registry-seed
-    ports:
-      - "3100:3100"
     volumes:
       - ./data/registry:/app/registry
     healthcheck:
