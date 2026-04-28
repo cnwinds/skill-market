@@ -1,121 +1,102 @@
 # SkillMarket
 
-源码仓库：<https://github.com/cnwinds/skill-market>
-
-SkillMarket 是 Skill 的市场、版本和分发系统。它不执行 Skill，不管理聊天会话，也不读取用户文件。
-
-## 三仓库关系
-
-当前 Skill 系统拆成三个独立仓库：
-
-```text
-skill-market
-  仓库：https://github.com/cnwinds/skill-market
-  职责：Skill 市场、版本分发、Market API、@qizhi/skill-spec 契约源头。
-
-official-skills
-  仓库：https://github.com/cnwinds/official-skills
-  职责：官方 Skill 源码、skill.json、SKILL.md、脚本、参考资料、校验和打包。
-
-skill-chat
-  仓库：https://github.com/cnwinds/skill-chat
-  职责：聊天应用、用户会话、Skill 安装、会话启用、运行本地已安装 Skill。
-```
-
-本地开发推荐三个项目并列放置：
-
-```text
-C:\projects\skill-market
-C:\projects\official-skills
-C:\projects\skill-chat
-```
-
-修改规则：
-
-- 契约字段、manifest schema、Market API 类型先改本仓库的 `packages/skill-spec`。
-- 官方 Skill 内容只改 `official-skills/skills/*`，不要在 Market 中手写 Skill 源码。
-- SkillChat 只消费 Market API 和安装包，不在聊天应用中私自发明市场字段。
-- 详细边界见 `PROJECT_DESIGN.md`。
+SkillMarket 是 Skill 的市场、版本和分发系统。它负责浏览、上传、审核、发布和下载 Skill，不执行 Skill 脚本，不管理 SkillChat 会话，也不读取 SkillChat 用户文件。
 
 ## 目录
 
 ```text
 apps/server              Market API 服务
-packages/skill-spec      三项目共享契约源头
-registry/skills          第一阶段本地文件 registry
-scripts                  官方包导入等脚本
-docs                     交接和 API 文档
+apps/web                 Web 前端
+packages/skill-spec      前后端共享契约和 schema
+registry/skills          仓库内置的公开 Skill 种子
+docker                   Docker 构建、编排和运行数据目录
+docs                     API、交接和开发文档
+scripts                  导入官方包等脚本
 ```
 
-## 开发命令
+## 本地开发
 
-```bash
+```powershell
 npm install
+npm run build
 npm run typecheck
 npm test
 ```
 
-## Docker 启动
+后端默认监听：
 
-构建并后台启动：
+```text
+http://127.0.0.1:3100
+```
 
-```bash
+健康检查：
+
+```powershell
+curl http://127.0.0.1:3100/health
+curl http://127.0.0.1:3100/api/v1/skills
+```
+
+## Docker
+
+Docker 相关文件集中在：
+
+```text
+docker/
+  Dockerfile
+  Dockerfile.dockerignore
+  compose.yml
+  entrypoint.sh
+  data/
+```
+
+启动：
+
+```powershell
 npm run docker:up
 ```
 
-查看日志：
+日志：
 
-```bash
+```powershell
 npm run docker:logs
 ```
 
 停止：
 
-```bash
+```powershell
 npm run docker:down
 ```
 
-默认监听：
+Docker 启动后的落地数据放在：
 
 ```text
-http://localhost:3100
+docker/data/registry
 ```
 
-健康检查：
+Compose 会把 `docker/data/registry` 挂载到容器内的 `/app/registry`。首次启动时，容器会把镜像内置的 `registry/skills` 种子复制到 `docker/data/registry/skills`；后续用户、会话、上传、审核、发布、精选和下架数据都会写入 `docker/data/registry`。
 
-```bash
-curl http://localhost:3100/health
-curl http://localhost:3100/api/v1/skills
-```
+等价 Compose 命令：
 
-`compose.yml` 会把本地 `registry/` 只读挂载到容器内，并设置 `REGISTRY_ROOT=/app/registry`。后续从 `official-skills` 重新导入包后，重启容器即可让 Market API 读取最新 registry。
-
-SkillChat 连接本服务时，在 `skill-chat` 的 `.env` 中配置：
-
-```env
-MARKET_BASE_URL=http://localhost:3100
-```
-
-如果 SkillChat 也放进同一个 Docker network，地址应改为：
-
-```env
-MARKET_BASE_URL=http://skill-market:3100
-```
-
-从 `official-skills/dist` 导入官方打包产物：
-
-```bash
-npm run import:official
+```powershell
+docker compose -f docker/compose.yml up -d --build
 ```
 
 ## API
 
-第一阶段只提供安装所需只读接口：
+完整接口契约见：
 
 ```text
-GET /api/v1/skills
-GET /api/v1/skills/{publisher}/{name}
-GET /api/v1/skills/{publisher}/{name}/versions
-GET /api/v1/skills/{publisher}/{name}/versions/{version}/manifest
-GET /api/v1/skills/{publisher}/{name}/versions/{version}/package
+docs/market-api.md
 ```
+
+前后端共享类型和 schema 以 `packages/skill-spec` 为准。前端用到的接口、参数、枚举和响应结构必须同步维护在 `docs/market-api.md`。
+
+## 官方 Skill 导入
+
+从 `official-skills/dist` 导入官方包到仓库内置 registry：
+
+```powershell
+npm run import:official -- ..\official-skills\dist
+```
+
+如果 Docker 运行数据已经初始化，导入仓库内置 registry 后不会自动覆盖 `docker/data/registry`。需要重置 Docker 运行数据时，先停止服务，再清空 `docker/data/registry`。

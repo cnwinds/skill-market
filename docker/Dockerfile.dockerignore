@@ -7,7 +7,6 @@ dist
 apps/*/dist
 packages/*/dist
 apps/*/.tmp
+docker/data
 coverage
 .DS_Store
-Dockerfile
-compose.yml

@@ -1,8 +1,8 @@
 services:
   skill-market:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     image: cnwinds/skill-market:local
     container_name: skill-market
     restart: unless-stopped
@@ -11,10 +11,11 @@ services:
       PORT: 3100
       NODE_ENV: production
       REGISTRY_ROOT: /app/registry
+      REGISTRY_SEED_ROOT: /app/registry-seed
     ports:
       - "3100:3100"
     volumes:
-      - ./registry:/app/registry:ro
+      - ./data/registry:/app/registry
     healthcheck:
       test:
         [

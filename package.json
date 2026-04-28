@@ -7,14 +7,16 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace @qizhi/skill-spec && npm run build --workspace @qizhi/skill-market-server",
-    "docker:build": "docker build -t cnwinds/skill-market:local .",
-    "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f skill-market",
-    "docker:up": "docker compose up -d --build",
+    "build": "npm run build --workspace @qizhi/skill-spec && npm run build --workspace @qizhi/skill-market-server && npm run build --workspace @qizhi/skill-market-web",
+    "dev:server": "npm run dev --workspace @qizhi/skill-market-server",
+    "dev:web": "npm run dev --workspace @qizhi/skill-market-web",
+    "docker:build": "docker build -f docker/Dockerfile -t cnwinds/skill-market:local .",
+    "docker:down": "docker compose -f docker/compose.yml down",
+    "docker:logs": "docker compose -f docker/compose.yml logs -f skill-market",
+    "docker:up": "docker compose -f docker/compose.yml up -d --build",
     "import:official": "node scripts/import-official-dist.mjs",
     "test": "npm run test --workspace @qizhi/skill-spec && npm run test --workspace @qizhi/skill-market-server",
-    "typecheck": "npm run build --workspace @qizhi/skill-spec && npm run typecheck --workspace @qizhi/skill-spec && npm run typecheck --workspace @qizhi/skill-market-server"
+    "typecheck": "npm run build --workspace @qizhi/skill-spec && npm run typecheck --workspace @qizhi/skill-spec && npm run typecheck --workspace @qizhi/skill-market-server && npm run typecheck --workspace @qizhi/skill-market-web"
   },
   "engines": {
     "node": ">=24.0.0"

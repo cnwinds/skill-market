@@ -32,7 +32,11 @@ export type RegistrySnapshot = {
 
 export type PackageFile = {
   path: string;
+  format: 'tgz' | 'zip';
+  contentType: string;
+  checksumSha256: string;
   sizeBytes: number;
+  modifiedAt: string;
 };
 
 const toIso = (date: Date): string => date.toISOString();
@@ -86,12 +90,48 @@ const makePackageUrl = (manifest: SkillManifest): string => {
   return `/api/v1/skills/${publisher}/${name}/versions/${manifest.version}/package`;
 };
 
+const packageCandidates = [
+  { filename: 'package.tgz', format: 'tgz' as const, contentType: 'application/gzip' },
+  { filename: 'package.zip', format: 'zip' as const, contentType: 'application/zip' },
+];
+
+const isRemovedVersion = async (versionDir: string): Promise<boolean> => {
+  try {
+    const marker = await stat(path.join(versionDir, 'removed.json'));
+    return marker.isFile();
+  } catch {
+    return false;
+  }
+};
+
+const findVersionPackageFile = async (versionDir: string): Promise<PackageFile> => {
+  for (const candidate of packageCandidates) {
+    const packagePath = path.join(versionDir, candidate.filename);
+    try {
+      const packageStats = await stat(packagePath);
+      if (packageStats.isFile()) {
+        return {
+          path: packagePath,
+          format: candidate.format,
+          contentType: candidate.contentType,
+          checksumSha256: await sha256File(packagePath),
+          sizeBytes: packageStats.size,
+          modifiedAt: toIso(packageStats.mtime),
+        };
+      }
+    } catch {
+      // Try the next supported package extension.
+    }
+  }
+
+  throw new RegistryNotFoundError('Package not found');
+};
+
 const readVersion = async (versionDir: string): Promise<MarketSkillVersion> => {
   const manifestPath = path.join(versionDir, 'manifest.json');
-  const packagePath = path.join(versionDir, 'package.tgz');
-  const [manifestFile, packageStats] = await Promise.all([
+  const [manifestFile, packageFile] = await Promise.all([
     readFile(manifestPath, 'utf8'),
-    stat(packagePath),
+    findVersionPackageFile(versionDir),
   ]);
   const manifest = parseSkillManifest(JSON.parse(manifestFile));
 
@@ -100,9 +140,11 @@ const readVersion = async (versionDir: string): Promise<MarketSkillVersion> => {
     version: manifest.version,
     manifest,
     packageUrl: makePackageUrl(manifest),
-    checksumSha256: await sha256File(packagePath),
-    sizeBytes: packageStats.size,
-    publishedAt: toIso(packageStats.mtime),
+    packageFormat: packageFile.format,
+    packageContentType: packageFile.contentType,
+    checksumSha256: packageFile.checksumSha256,
+    sizeBytes: packageFile.sizeBytes,
+    publishedAt: packageFile.modifiedAt,
   });
 };
 
@@ -141,7 +183,12 @@ export const scanRegistry = async (registryRoot: string): Promise<RegistrySnapsh
       const versions: MarketSkillVersion[] = [];
 
       for (const versionName of versionNames) {
-        const version = await readVersion(path.join(skillDir, versionName));
+        const versionDir = path.join(skillDir, versionName);
+        if (await isRemovedVersion(versionDir)) {
+          continue;
+        }
+
+        const version = await readVersion(versionDir);
         if (version.manifest.id !== `${publisher}/${name}`) {
           throw new Error(`Manifest id ${version.manifest.id} does not match ${publisher}/${name}`);
         }
@@ -189,18 +236,9 @@ export const findPackageFile = async (
   version: string,
 ): Promise<PackageFile> => {
   await findSkill(registryRoot, publisher, name);
-  const packagePath = path.join(registryRoot, 'skills', publisher, name, version, 'package.tgz');
-
-  try {
-    const packageStats = await stat(packagePath);
-    if (!packageStats.isFile()) {
-      throw new RegistryNotFoundError('Package not found');
-    }
-    return { path: packagePath, sizeBytes: packageStats.size };
-  } catch (error) {
-    if (error instanceof RegistryNotFoundError) {
-      throw error;
-    }
+  const versionDir = path.join(registryRoot, 'skills', publisher, name, version);
+  if (await isRemovedVersion(versionDir)) {
     throw new RegistryNotFoundError('Package not found');
   }
+  return findVersionPackageFile(versionDir);
 };

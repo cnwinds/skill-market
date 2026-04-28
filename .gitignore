@@ -3,3 +3,4 @@ dist/
 apps/*/dist/
 packages/*/dist/
 apps/*/.tmp/
+registry/market-data/
