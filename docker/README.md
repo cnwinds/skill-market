@@ -51,7 +51,7 @@ Compose starts two containers:
 
 ```text
 skill-market-server  Fastify API, exposed on http://localhost:3100
-skill-market-web     Nginx frontend, exposed on http://localhost:8080
+skill-market-web     Nginx frontend, exposed on http://localhost:7080
 ```
 
 The web container proxies `/api/*` and `/health` to `skill-market-server:3100`.

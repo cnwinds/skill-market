@@ -74,7 +74,7 @@ Compose starts two containers:
 
 ```text
 skill-market-server  Backend API, http://localhost:3100
-skill-market-web     Frontend site, http://localhost:8080
+skill-market-web     Frontend site, http://localhost:7080
 ```
 
 The web container proxies `/api/*` and `/health` to `skill-market-server:3100`.

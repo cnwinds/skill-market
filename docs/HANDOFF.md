@@ -197,7 +197,7 @@ Docker Compose starts two containers:
 
 ```text
 skill-market-server  Backend API, exposed on http://localhost:3100
-skill-market-web     Frontend site, exposed on http://localhost:8080
+skill-market-web     Frontend site, exposed on http://localhost:7080
 ```
 
 The web container serves `apps/web` through Nginx and proxies `/api/*` and `/health` to `skill-market-server:3100`.

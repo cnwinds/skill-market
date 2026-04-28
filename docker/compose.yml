@@ -40,7 +40,7 @@ services:
       skill-market-server:
         condition: service_healthy
     ports:
-      - "8080:80"
+      - "7080:80"
     healthcheck:
       test:
         [
