@@ -36,7 +36,8 @@ export default function AppRouter() {
           <Route index element={<HomePage />} />
           <Route path="skills" element={<SkillListPage />} />
           <Route path="skills/:publisher/:name" element={<SkillDetailPage />} />
-          <Route path="market" element={<MarketPage />} />
+          <Route path="docs" element={<MarketPage />} />
+          <Route path="market" element={<Navigate to="/docs" replace />} />
 
           <Route
             path="publish"
@@ -98,8 +99,8 @@ export default function AppRouter() {
             element={
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <div className="text-5xl mb-4">🔍</div>
-                <h2 className="text-2xl font-semibold text-gray-800 mb-2">404 页面不存在</h2>
-                <a href="/" className="text-blue-600 hover:underline text-sm">返回首页</a>
+                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">404 页面不存在</h2>
+                <a href="/" className="text-blue-600 dark:text-blue-400 hover:underline text-sm">返回首页</a>
               </div>
             }
           />

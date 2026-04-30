@@ -1,13 +1,21 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --color-primary: #2563eb;
     --color-primary-hover: #1d4ed8;
   }
 
+  .dark {
+    --color-primary: #3b82f6;
+    --color-primary-hover: #60a5fa;
+    color-scheme: dark;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
   }
 
   * {

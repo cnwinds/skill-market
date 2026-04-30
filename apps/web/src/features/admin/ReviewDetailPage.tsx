@@ -50,9 +50,9 @@ export default function ReviewDetailPage() {
   if (isLoading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/2" />
-        <div className="h-40 bg-gray-200 rounded" />
-        <div className="h-40 bg-gray-200 rounded" />
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+        <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
     );
   }
@@ -65,55 +65,55 @@ export default function ReviewDetailPage() {
   return (
     <div>
       <div className="flex items-center gap-2 text-sm mb-6">
-        <Link to="/admin/reviews" className="text-gray-500 hover:text-gray-700">审核队列</Link>
-        <span className="text-gray-300">/</span>
-        <span className="font-mono text-xs text-gray-900">{sub.id}</span>
+        <Link to="/admin/reviews" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">审核队列</Link>
+        <span className="text-gray-300 dark:text-gray-600">/</span>
+        <span className="font-mono text-xs text-gray-900 dark:text-gray-100">{sub.id}</span>
       </div>
 
       <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <h1 className="text-xl font-semibold text-gray-900">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           {sub.skillId ?? '未知 Skill'}
-          {sub.version && <span className="ml-2 font-mono text-sm text-gray-400">v{sub.version}</span>}
+          {sub.version && <span className="ml-2 font-mono text-sm text-gray-400 dark:text-gray-500">v{sub.version}</span>}
         </h1>
         <StatusBadge status={sub.status} />
       </div>
 
       {/* Risk summary */}
       {perms && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">权限 & 风险</h3>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-4">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">权限 & 风险</h3>
           <PermissionBadge permissions={perms} />
         </div>
       )}
 
       {/* Validation */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">自动校验</h3>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-4">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">自动校验</h3>
         {sub.validation.errors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
-            <p className="text-red-700 text-sm font-medium mb-1">错误</p>
-            <ul className="text-red-600 text-sm space-y-0.5">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-2">
+            <p className="text-red-700 dark:text-red-300 text-sm font-medium mb-1">错误</p>
+            <ul className="text-red-600 dark:text-red-400 text-sm space-y-0.5">
               {sub.validation.errors.map((e, i) => <li key={i}>• {e.message}</li>)}
             </ul>
           </div>
         )}
         {sub.validation.warnings.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-2">
-            <p className="text-yellow-700 text-sm font-medium mb-1">警告</p>
-            <ul className="text-yellow-600 text-sm space-y-0.5">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-2">
+            <p className="text-yellow-700 dark:text-yellow-300 text-sm font-medium mb-1">警告</p>
+            <ul className="text-yellow-600 dark:text-yellow-400 text-sm space-y-0.5">
               {sub.validation.warnings.map((w, i) => <li key={i}>• {w.message}</li>)}
             </ul>
           </div>
         )}
         {sub.validation.errors.length === 0 && (
-          <p className="text-green-700 text-sm">✓ 全部校验通过</p>
+          <p className="text-green-700 dark:text-green-300 text-sm">✓ 全部校验通过</p>
         )}
       </div>
 
       {/* Publisher info */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">发布者信息</h3>
-        <div className="text-sm text-gray-600 space-y-1">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-4">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">发布者信息</h3>
+        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
           <p>用户：{sub.user?.displayName ?? '—'} ({sub.user?.email ?? '—'})</p>
           <p>发布者名称：{sub.publisher ?? '—'}</p>
           {sub.submittedAt && (
@@ -124,24 +124,24 @@ export default function ReviewDetailPage() {
 
       {/* Package info */}
       {sub.package && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">包文件</h3>
-          <div className="text-sm text-gray-600 space-y-1">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-4">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">包文件</h3>
+          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
             <p>文件名：{sub.package.filename}</p>
             <p>大小：{(sub.package.sizeBytes / 1024).toFixed(1)} KB</p>
-            <p className="font-mono text-xs text-gray-400">SHA256: {sub.package.checksumSha256}</p>
+            <p className="font-mono text-xs text-gray-400 dark:text-gray-500">SHA256: {sub.package.checksumSha256}</p>
           </div>
           {sub.fileEntries.length > 0 && (
             <details className="mt-3">
-              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+              <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200">
                 查看文件列表（{sub.fileEntries.length} 个文件）
               </summary>
               <div className="mt-2 max-h-48 overflow-y-auto space-y-0.5">
                 {sub.fileEntries.map((f) => (
-                  <div key={f.path} className="font-mono text-xs text-gray-500 px-2 py-0.5 hover:bg-gray-50 rounded">
+                  <div key={f.path} className="font-mono text-xs text-gray-500 dark:text-gray-400 px-2 py-0.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">
                     {f.path}
                     {f.sizeBytes !== undefined && (
-                      <span className="text-gray-400 ml-2">{(f.sizeBytes / 1024).toFixed(1)}K</span>
+                      <span className="text-gray-400 dark:text-gray-500 ml-2">{(f.sizeBytes / 1024).toFixed(1)}K</span>
                     )}
                   </div>
                 ))}
@@ -153,16 +153,16 @@ export default function ReviewDetailPage() {
 
       {/* Release notes */}
       {sub.releaseNotes && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">发布说明</h3>
-          <p className="text-sm text-gray-600">{sub.releaseNotes}</p>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-4">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">发布说明</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{sub.releaseNotes}</p>
         </div>
       )}
 
       {/* Manifest */}
       {sub.manifest && (
         <div className="mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">manifest</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">manifest</h3>
           <JsonViewer value={sub.manifest as unknown as object} maxHeight="400px" />
         </div>
       )}
@@ -172,14 +172,14 @@ export default function ReviewDetailPage() {
         <div className="flex gap-3 justify-end mt-6 sticky bottom-4">
           <button
             onClick={() => { setRejectReason(''); setRejectModal(true); }}
-            className="text-sm px-5 py-2.5 rounded-lg border border-red-300 text-red-600 bg-white hover:bg-red-50 shadow-sm"
+            className="text-sm px-5 py-2.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 shadow-sm"
           >
             拒绝
           </button>
           <button
             onClick={() => { if (confirm('确认通过此提交？')) approveMutation.mutate(); }}
             disabled={approveMutation.isPending || sub.validation.errors.length > 0}
-            className="text-sm px-6 py-2.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 shadow-sm"
+            className="text-sm px-6 py-2.5 rounded-lg bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600 disabled:opacity-50 shadow-sm"
           >
             {approveMutation.isPending ? '处理中…' : '审核通过'}
           </button>
@@ -190,7 +190,7 @@ export default function ReviewDetailPage() {
         <div className="flex gap-3 justify-end mt-6">
           <button
             onClick={() => { setRemoveReason(''); setRemoveModal(true); }}
-            className="text-sm px-5 py-2.5 rounded-lg border border-orange-300 text-orange-600 hover:bg-orange-50"
+            className="text-sm px-5 py-2.5 rounded-lg border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
           >
             下架此版本
           </button>
@@ -206,7 +206,7 @@ export default function ReviewDetailPage() {
           <>
             <button
               onClick={() => setRejectModal(false)}
-              className="text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+              className="text-sm px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               取消
             </button>
@@ -220,17 +220,17 @@ export default function ReviewDetailPage() {
           </>
         }
       >
-        <p className="text-sm text-gray-600 mb-3">请填写拒绝原因，发布者将会看到此内容。</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">请填写拒绝原因，发布者将会看到此内容。</p>
         <textarea
           value={rejectReason}
           onChange={(e) => setRejectReason(e.target.value)}
           rows={4}
           autoFocus
           placeholder="例如：manifest description 描述不够清晰，scripts 权限未说明用途…"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400"
         />
         {rejectMutation.isError && (
-          <p className="text-red-600 text-sm mt-2">
+          <p className="text-red-600 dark:text-red-400 text-sm mt-2">
             {rejectMutation.error instanceof Error ? rejectMutation.error.message : '操作失败'}
           </p>
         )}
@@ -245,7 +245,7 @@ export default function ReviewDetailPage() {
           <>
             <button
               onClick={() => setRemoveModal(false)}
-              className="text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+              className="text-sm px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               取消
             </button>
@@ -259,13 +259,13 @@ export default function ReviewDetailPage() {
           </>
         }
       >
-        <p className="text-sm text-gray-600 mb-3">请填写下架原因（将记入审计日志）。</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">请填写下架原因（将记入审计日志）。</p>
         <textarea
           value={removeReason}
           onChange={(e) => setRemoveReason(e.target.value)}
           rows={3}
           autoFocus
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-400"
         />
       </Modal>
     </div>

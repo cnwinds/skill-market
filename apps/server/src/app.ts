@@ -2006,9 +2006,9 @@ export const createApp = (options: AppOptions = {}): FastifyInstance => {
     return marketPublishKeyResponseSchema.parse({ publishKey: publicPublishKey(updated) });
   });
 
-  // market.md
+  // skill-market discovery endpoint
 
-  app.get('/market.md', async (request, reply) => {
+  app.get('/.well-known/skill-market.md', async (request, reply) => {
     const host = request.headers.host ?? 'localhost:3100';
     const proto = (request.headers['x-forwarded-proto'] as string | undefined) ?? 'http';
     const baseUrl = `${proto}://${host}`;
@@ -2018,6 +2018,10 @@ export const createApp = (options: AppOptions = {}): FastifyInstance => {
       .type('text/markdown; charset=utf-8')
       .header('cache-control', 'public, max-age=60')
       .send(content);
+  });
+
+  app.get('/market.md', async (_request, reply) => {
+    return reply.redirect('/.well-known/skill-market.md', 301);
   });
 
   app.setErrorHandler((error, _request, reply) => {

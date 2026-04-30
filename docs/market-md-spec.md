@@ -1,12 +1,14 @@
-# market.md Specification v1.0
+# skill-market.md Specification v1.0
 
-`market.md` is a machine-readable and human-readable file served at the root of a SkillMarket instance. Tools use it to discover endpoints for installing and publishing Skills.
+`skill-market.md` is a machine-readable and human-readable file served under `/.well-known/` on a SkillMarket instance. Tools use it to discover endpoints for installing and publishing Skills.
 
 ## Discovery
 
 ```
-GET /market.md
+GET /.well-known/skill-market.md
 ```
+
+> **Migration note:** The legacy path `/market.md` returns a `301` redirect to `/.well-known/skill-market.md`.
 
 Returns `text/markdown; charset=utf-8`. The file is both parseable by tools and renderable as a human-readable page.
 
@@ -145,4 +147,5 @@ Verify the SHA-256 checksum after download.
 - Parse `skill-market` blocks in document order; later blocks with the same `action` override earlier ones
 - Unknown fields in blocks must be ignored (forward compatibility)
 - The `baseUrl` in the front matter is the canonical URL; `baseUrl` inside blocks may differ (e.g., CDN for packages)
-- Tools should cache `market.md` for up to 60 seconds (`cache-control: public, max-age=60`)
+- Tools should cache `skill-market.md` for up to 60 seconds (`cache-control: public, max-age=60`)
+- Tools should first try `/.well-known/skill-market.md`; the legacy path `/market.md` may redirect

@@ -9,13 +9,13 @@ import type { MarketSubmission } from '@qizhi/skill-spec';
 function riskTags(sub: MarketSubmission) {
   const tags: { label: string; className: string }[] = [];
   const perms = sub.manifest?.permissions;
-  if (perms?.scripts) tags.push({ label: 'scripts', className: 'bg-red-100 text-red-700' });
+  if (perms?.scripts) tags.push({ label: 'scripts', className: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300' });
   if (perms?.network === true || (perms?.network && typeof perms.network === 'object'))
-    tags.push({ label: 'network', className: 'bg-orange-100 text-orange-700' });
+    tags.push({ label: 'network', className: 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300' });
   if (perms?.secrets && perms.secrets.length > 0)
-    tags.push({ label: 'secrets', className: 'bg-orange-100 text-orange-700' });
+    tags.push({ label: 'secrets', className: 'bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300' });
   if (sub.package && sub.package.sizeBytes > 5 * 1024 * 1024)
-    tags.push({ label: 'large_pkg', className: 'bg-gray-200 text-gray-600' });
+    tags.push({ label: 'large_pkg', className: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400' });
   return tags;
 }
 
@@ -49,7 +49,7 @@ export default function ReviewQueuePage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">审核队列</h1>
+      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">审核队列</h1>
 
       <div className="flex gap-2 mb-6 flex-wrap">
         {STATUS_FILTER_OPTIONS.map((opt) => (
@@ -58,8 +58,8 @@ export default function ReviewQueuePage() {
             onClick={() => setStatus(opt.value)}
             className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
               status === opt.value
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                ? 'bg-blue-600 dark:bg-blue-500 text-white border-blue-600 dark:border-blue-500'
+                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400'
             }`}
           >
             {opt.label}
@@ -70,7 +70,7 @@ export default function ReviewQueuePage() {
       {isLoading && (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+            <div key={i} className="h-16 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
           ))}
         </div>
       )}
@@ -89,14 +89,14 @@ export default function ReviewQueuePage() {
               <Link
                 key={sub.id}
                 to={`/admin/reviews/${sub.id}`}
-                className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="font-medium text-gray-900">{sub.skillId ?? '未知'}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{sub.skillId ?? '未知'}</span>
                       {sub.version && (
-                        <span className="font-mono text-xs text-gray-400">v{sub.version}</span>
+                        <span className="font-mono text-xs text-gray-400 dark:text-gray-500">v{sub.version}</span>
                       )}
                       <StatusBadge status={sub.status} />
                       {tags.map((t) => (
@@ -105,7 +105,7 @@ export default function ReviewQueuePage() {
                         </span>
                       ))}
                     </div>
-                    <div className="text-xs text-gray-400 flex gap-3 flex-wrap">
+                    <div className="text-xs text-gray-400 dark:text-gray-500 flex gap-3 flex-wrap">
                       <span>发布者：{sub.user?.displayName ?? sub.publisher ?? '—'}</span>
                       <span>提交：{sub.submittedAt
                         ? new Date(sub.submittedAt).toLocaleString('zh-CN')
@@ -113,7 +113,7 @@ export default function ReviewQueuePage() {
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs text-blue-600 shrink-0">审核 →</span>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 shrink-0">审核 →</span>
                 </div>
               </Link>
             );

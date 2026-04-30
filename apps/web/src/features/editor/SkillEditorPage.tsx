@@ -130,7 +130,7 @@ export default function SkillEditorPage() {
   }, [currentDir]);
 
   if (workspaceQuery.isLoading) {
-    return <div className="max-w-7xl mx-auto px-4 py-8 text-sm text-gray-500">加载中...</div>;
+    return <div className="max-w-7xl mx-auto px-4 py-8 text-sm text-gray-500 dark:text-gray-400">加载中...</div>;
   }
 
   if (workspaceQuery.isError || !workspace) {
@@ -169,17 +169,17 @@ export default function SkillEditorPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-            <Link to={`/skills/${workspace.publisher}/${workspace.name}`} className="hover:text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
+            <Link to={`/skills/${workspace.publisher}/${workspace.name}`} className="hover:text-gray-700 dark:hover:text-gray-200">
               {workspace.skillId}
             </Link>
             <span>/</span>
             <span>v{workspace.sourceVersion}</span>
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold text-gray-900">编辑 v{workspace.targetVersion}</h1>
-            <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">{workspace.status}</span>
-            {dirty && <span className="text-xs text-orange-600">未保存</span>}
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">编辑 v{workspace.targetVersion}</h1>
+            <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">{workspace.status}</span>
+            {dirty && <span className="text-xs text-orange-600 dark:text-orange-400">未保存</span>}
           </div>
         </div>
 
@@ -187,14 +187,14 @@ export default function SkillEditorPage() {
           <button
             onClick={() => validateMutation.mutate()}
             disabled={validateMutation.isPending}
-            className="text-sm px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+            className="text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
           >
             校验
           </button>
           <button
             onClick={handleCreateDev}
             disabled={createDevMutation.isPending}
-            className="text-sm px-3 py-2 rounded-lg border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+            className="text-sm px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 disabled:opacity-50"
           >
             生成开发版本
           </button>
@@ -203,18 +203,18 @@ export default function SkillEditorPage() {
               if (confirm('提交审核？')) submitMutation.mutate();
             }}
             disabled={submitMutation.isPending}
-            className="text-sm px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="text-sm px-4 py-2 rounded-lg bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
           >
             提交审核
           </button>
           {isAdmin && (
-            <span className="text-xs text-gray-400 border border-gray-200 rounded px-2 py-1">Admin</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded px-2 py-1">Admin</span>
           )}
         </div>
       </div>
 
       {(saveMutation.isError || validateMutation.isError || createDevMutation.isError || submitMutation.isError) && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+        <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm px-4 py-3 rounded-lg">
           {[
             saveMutation.error,
             validateMutation.error,
@@ -227,21 +227,21 @@ export default function SkillEditorPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_320px] gap-4">
-        <aside className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
-            <span className="text-sm font-medium text-gray-700">文件</span>
+        <aside className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">文件</span>
             <div className="flex gap-1">
-              <button onClick={handleNewFile} className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50">
+              <button onClick={handleNewFile} className="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                 文件
               </button>
-              <button onClick={handleNewDirectory} className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50">
+              <button onClick={handleNewDirectory} className="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                 目录
               </button>
             </div>
           </div>
-          <div className="px-3 py-2 border-b border-gray-100 text-xs text-gray-500 flex items-center gap-2">
+          <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
             {currentDir && (
-              <button onClick={() => setCurrentDir(parentDir)} className="text-blue-600 hover:underline">
+              <button onClick={() => setCurrentDir(parentDir)} className="text-blue-600 dark:text-blue-400 hover:underline">
                 上级
               </button>
             )}
@@ -265,18 +265,18 @@ export default function SkillEditorPage() {
           </div>
         </aside>
 
-        <main className="bg-white border border-gray-200 rounded-lg overflow-hidden min-h-[640px]">
-          <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-gray-200">
+        <main className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden min-h-[640px]">
+          <div className="flex items-center justify-between gap-3 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{currentFile || '未选择文件'}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{currentFile || '未选择文件'}</p>
               {contentQuery.data && (
-                <p className="text-xs text-gray-400">revision {contentQuery.data.revision}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">revision {contentQuery.data.revision}</p>
               )}
             </div>
             <button
               onClick={() => saveMutation.mutate()}
               disabled={!currentFile || !dirty || saveMutation.isPending}
-              className="text-sm px-4 py-1.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40"
+              className="text-sm px-4 py-1.5 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-40"
             >
               保存
             </button>
@@ -289,21 +289,21 @@ export default function SkillEditorPage() {
                 setDirty(true);
               }}
               spellCheck={false}
-              className="w-full h-[590px] p-4 font-mono text-sm text-gray-800 outline-none resize-none"
+              className="w-full h-[590px] p-4 font-mono text-sm text-gray-800 dark:text-gray-200 dark:bg-gray-900 outline-none resize-none"
             />
           ) : (
-            <div className="p-8 text-sm text-gray-500">选择一个文本文件</div>
+            <div className="p-8 text-sm text-gray-500 dark:text-gray-400">选择一个文本文件</div>
           )}
         </main>
 
         <aside className="space-y-4 lg:col-span-2 xl:col-span-1">
-          <section className="bg-white border border-gray-200 rounded-lg p-4">
-            <h2 className="text-sm font-semibold text-gray-800 mb-3">校验</h2>
+          <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+            <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">校验</h2>
             {!validation ? (
-              <p className="text-sm text-gray-500">暂无结果</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">暂无结果</p>
             ) : (
               <div className="space-y-3">
-                <div className={`text-sm font-medium ${validation.valid ? 'text-green-700' : 'text-red-700'}`}>
+                <div className={`text-sm font-medium ${validation.valid ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
                   {validation.valid ? '通过' : '未通过'}
                 </div>
                 {validation.errors.length > 0 && (
@@ -316,56 +316,56 @@ export default function SkillEditorPage() {
             )}
           </section>
 
-          <section className="bg-white border border-gray-200 rounded-lg p-4">
+          <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-800">开发版本</h2>
-              <button onClick={handleCreateDev} className="text-xs text-blue-600 hover:underline">
+              <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">开发版本</h2>
+              <button onClick={handleCreateDev} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
                 生成
               </button>
             </div>
             <div className="space-y-2">
               {(devReleasesQuery.data?.devReleases ?? []).slice(0, 5).map((release) => (
-                <div key={release.id} className="border border-gray-100 rounded px-3 py-2">
+                <div key={release.id} className="border border-gray-100 dark:border-gray-700 rounded px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
-                    <code className="text-xs font-mono text-gray-800">{release.version}</code>
-                    <span className="text-xs text-gray-400">{release.status}</span>
+                    <code className="text-xs font-mono text-gray-800 dark:text-gray-200">{release.version}</code>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{release.status}</span>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     {new Date(release.createdAt).toLocaleString('zh-CN')}
                   </p>
                 </div>
               ))}
               {devReleasesQuery.data?.devReleases.length === 0 && (
-                <p className="text-sm text-gray-500">暂无开发版本</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">暂无开发版本</p>
               )}
             </div>
           </section>
 
-          <section className="bg-white border border-gray-200 rounded-lg p-4">
+          <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-800">开发者 Key</h2>
-              <button onClick={handleCreateKey} className="text-xs text-blue-600 hover:underline">
+              <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">开发者 Key</h2>
+              <button onClick={handleCreateKey} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
                 新建
               </button>
             </div>
             <div className="space-y-2">
               {(developerKeysQuery.data?.developerKeys ?? []).map((key) => (
-                <div key={key.id} className="border border-gray-100 rounded px-3 py-2">
+                <div key={key.id} className="border border-gray-100 dark:border-gray-700 rounded px-3 py-2">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-xs font-medium text-gray-700">{key.name}</span>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{key.name}</span>
                     <button
                       onClick={() => revokeKeyMutation.mutate(key.id)}
                       disabled={Boolean(key.revokedAt)}
-                      className="text-xs text-red-600 hover:underline disabled:text-gray-300"
+                      className="text-xs text-red-600 dark:text-red-400 hover:underline disabled:text-gray-300 dark:disabled:text-gray-600"
                     >
                       吊销
                     </button>
                   </div>
-                  <code className="block text-xs font-mono text-gray-500 break-all select-all">{key.secret}</code>
+                  <code className="block text-xs font-mono text-gray-500 dark:text-gray-400 break-all select-all">{key.secret}</code>
                 </div>
               ))}
               {developerKeysQuery.data?.developerKeys.length === 0 && (
-                <p className="text-sm text-gray-500">暂无 Key</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">暂无 Key</p>
               )}
             </div>
           </section>
@@ -389,16 +389,16 @@ function FileRow({
   return (
     <div
       className={`group flex items-center gap-2 rounded px-2 py-1.5 text-sm ${
-        active ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+        active ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
       }`}
     >
       <button onClick={onOpen} className="flex-1 min-w-0 text-left truncate">
-        <span className="text-gray-400 mr-1">{entry.kind === 'directory' ? '▸' : '•'}</span>
+        <span className="text-gray-400 dark:text-gray-500 mr-1">{entry.kind === 'directory' ? '▸' : '•'}</span>
         {entry.name}
       </button>
       <button
         onClick={onDelete}
-        className="opacity-0 group-hover:opacity-100 text-xs text-red-500 hover:text-red-700"
+        className="opacity-0 group-hover:opacity-100 text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
       >
         删除
       </button>
@@ -408,8 +408,8 @@ function FileRow({
 
 function IssueList({ title, items, tone }: { title: string; items: string[]; tone: 'red' | 'yellow' }) {
   const classes = tone === 'red'
-    ? 'bg-red-50 border-red-200 text-red-700'
-    : 'bg-yellow-50 border-yellow-200 text-yellow-700';
+    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+    : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300';
   return (
     <div className={`border rounded p-3 ${classes}`}>
       <p className="text-xs font-medium mb-1">{title}</p>

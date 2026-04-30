@@ -7,7 +7,7 @@ export default function JsonViewer({ value, maxHeight = '400px' }: Props) {
   const formatted = JSON.stringify(value, null, 2);
   return (
     <div
-      className="bg-gray-950 rounded-lg overflow-auto text-xs font-mono"
+      className="bg-gray-950 rounded-lg overflow-auto text-xs font-mono border border-gray-200 dark:border-gray-700"
       style={{ maxHeight }}
     >
       <pre className="p-4 text-green-300 whitespace-pre">{formatted}</pre>
