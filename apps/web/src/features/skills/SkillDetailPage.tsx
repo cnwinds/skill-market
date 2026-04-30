@@ -64,19 +64,11 @@ export default function SkillDetailPage() {
   const canEdit = Boolean(user && publisher && (user.roles.includes('admin') || user.publishers.includes(publisher)));
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const installPrompt = latest
-    ? `请从 SkillMarket 自动安装这个正式版 Skill：
+    ? `请读取市场发现文件并安装这个 Skill，下载后校验 X-Skill-Sha256。
 
 市场发现文件：${baseUrl}/.well-known/skill-market.md
-Skill ID：${skill.id}
-版本：${latest.version}
-
-要求：
-1. 先读取市场发现文件，解析 action: install 的接口。
-2. 读取这个 Skill 的详情，确认版本和 manifest。
-3. 下载 ${skill.id}@${latest.version} 的 package。
-4. 用响应头 X-Skill-Sha256 校验下载文件。
-5. 安装到当前工具或 SkillChat 支持的本地 Skill 目录；如果你不知道目录，先问我。
-6. 完成后告诉我安装位置、Skill ID、版本和校验结果。`
+安装Skill：${skill.id}
+版本：${latest.version}`
     : '';
 
   return (

@@ -2066,8 +2066,12 @@ export const createApp = (options: AppOptions = {}): FastifyInstance => {
   // skill-market discovery endpoint
 
   app.get('/.well-known/skill-market.md', async (request, reply) => {
-    const host = request.headers.host ?? 'localhost:3100';
-    const proto = (request.headers['x-forwarded-proto'] as string | undefined) ?? 'http';
+    const forwardedHost = request.headers['x-forwarded-host'];
+    const forwardedProto = request.headers['x-forwarded-proto'];
+    const host = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)
+      ?? request.headers.host
+      ?? 'localhost:3100';
+    const proto = (Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto) ?? 'http';
     const baseUrl = `${proto}://${host}`;
 
     const content = generateMarketMd(baseUrl);

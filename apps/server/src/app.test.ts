@@ -13,6 +13,23 @@ test('GET /health returns ok', async () => {
   assert.deepEqual(response.json(), { status: 'ok' });
 });
 
+test('GET /.well-known/skill-market.md uses forwarded frontend origin', async () => {
+  const app = createApp();
+  const response = await app.inject({
+    method: 'GET',
+    url: '/.well-known/skill-market.md',
+    headers: {
+      host: 'localhost:3100',
+      'x-forwarded-host': 'localhost:5173',
+      'x-forwarded-proto': 'http',
+    },
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.match(response.body, /baseUrl: "http:\/\/localhost:5173"/);
+  assert.match(response.body, /manageUrl: http:\/\/localhost:5173\/publisher\/keys/);
+});
+
 test('GET /api/v1/skills returns registry summaries', async () => {
   const registryRoot = await makeRegistryFixture();
   const app = createApp({ registryRoot });

@@ -17,7 +17,11 @@ export default defineConfig({
       },
       '/.well-known': {
         target: 'http://localhost:3100',
-        changeOrigin: true,
+        changeOrigin: false,
+      },
+      '/market.md': {
+        target: 'http://localhost:3100',
+        changeOrigin: false,
       },
     },
   },

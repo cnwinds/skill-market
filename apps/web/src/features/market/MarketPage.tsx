@@ -21,6 +21,23 @@ function ActionLink({ to, children }: { to: string; children: React.ReactNode })
   );
 }
 
+function CommandExample({ title, command, desc }: { title: string; command: string; desc: string }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+          <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">{desc}</p>
+        </div>
+        <CopyButton value={command} idleLabel="复制" />
+      </div>
+      <div className="rounded-md bg-white px-3 py-2 font-mono text-xs text-gray-800 dark:bg-gray-950 dark:text-gray-200">
+        {command}
+      </div>
+    </div>
+  );
+}
+
 export default function MarketPage() {
   const { data: rawMd, isLoading, error } = useQuery<string>({
     queryKey: ['skill-market-md'],
@@ -34,15 +51,12 @@ export default function MarketPage() {
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const discoveryUrl = `${baseUrl}/.well-known/skill-market.md`;
-  const toolPrompt = `你是一个 SkillMarket 自动化助手。下面是这个市场的发现文件内容，请先理解其中的安装和发布接口。之后我只会告诉你我要安装哪个 Skill，或者我要上传哪个本地包，你按发现文件里的接口自动完成。
+  const toolPrompt = `请读取市场发现文件，后续按我给的命令安装或上传 Skill。
 
-使用规则：
-1. 安装正式版 Skill：搜索或解析 publisher/name，下载最新版本 package，校验 X-Skill-Sha256，然后安装到当前工具支持的 Skill 目录；如果不知道目录，先问我。
-2. 上传正式版 Skill：使用我提供的 skpub_ Publish Key，按 Authorization: Bearer {key} 请求；multipart/form-data 的文件字段必须叫 file；预检有 errors 就停止；通过后提交审核并告诉我 submission id 和状态。
-3. 安装开发版 Skill：必须使用我提供的 skdev_ Developer Key，请求头是 X-Skill-Dev-Key；开发版只用于本地测试，不要当成正式版本。
-4. 不要把 key 写进代码、仓库、日志或 URL query。
+市场发现文件：${discoveryUrl}
 
-${rawMd ?? `请读取 ${discoveryUrl} 获取发现文件。`}`;
+安装时下载后校验 X-Skill-Sha256；如果不知道本地 Skill 安装目录，先问我。
+上传时不要把 Publish Key 或 Developer Key 写进代码、仓库、日志或 URL query。`;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -66,30 +80,52 @@ ${rawMd ?? `请读取 ${discoveryUrl} 获取发现文件。`}`;
           <CopyButton value={toolPrompt} idleLabel="复制工具提示词" />
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div>
-              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">1. 复制</div>
+        <div className="space-y-4">
+          <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900 dark:bg-blue-950/30">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">1. 复制基础提示词</h3>
+                <p className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                  先贴给工具一次。工具会读取市场发现文件，之后就能按你的命令安装或上传。
+                </p>
+              </div>
+              <CopyButton value={toolPrompt} idleLabel="复制提示词" />
+            </div>
+            <pre className="max-h-40 overflow-auto rounded-md bg-white p-3 font-mono text-xs leading-relaxed text-gray-700 dark:bg-gray-900 dark:text-gray-300">
+              {toolPrompt}
+            </pre>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <div className="mb-3">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">2. 复制一条命令</h3>
               <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                点击上面的“复制工具提示词”。提示词里已经包含市场发现文件内容。
+                基础提示词贴完后，再复制下面任意一条给工具。
               </p>
             </div>
-            <div>
-              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">2. 粘贴</div>
-              <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                贴到 Claude Code、SkillChat 或其他能联网/读写文件的工具。
-              </p>
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">3. 下命令</div>
-              <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                例如：安装 <InlineCode>official/xlsx</InlineCode>，或上传 <InlineCode>package.tgz</InlineCode>。
-              </p>
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <CommandExample
+                title="安装指定 Skill"
+                desc="已知道 publisher/name 时使用。"
+                command="安装Skill：official/xlsx"
+              />
+              <CommandExample
+                title="搜索并安装"
+                desc="只知道关键词时使用。"
+                command="搜索并安装Skill：pdf"
+              />
+              <CommandExample
+                title="上传正式版"
+                desc="需要 Publish Key，提交后进入审核。"
+                command="上传Skill：C:\\path\\package.tgz，Publish Key：skpub_..."
+              />
+              <CommandExample
+                title="安装开发版"
+                desc="需要 Developer Key，只用于本地测试。"
+                command="安装开发版Skill：official/xlsx@0.1.1，Developer Key：skdev_..."
+              />
             </div>
           </div>
-          <pre className="mt-4 max-h-48 overflow-auto rounded-md bg-gray-50 p-3 font-mono text-xs leading-relaxed text-gray-700 dark:bg-gray-900 dark:text-gray-300">
-            {toolPrompt}
-          </pre>
         </div>
       </section>
 
