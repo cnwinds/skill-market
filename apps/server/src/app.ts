@@ -22,6 +22,8 @@ import {
   marketDevReleaseResponseSchema,
   marketEditWorkspaceListResponseSchema,
   marketEditWorkspaceResponseSchema,
+  marketPublishKeyListResponseSchema,
+  marketPublishKeyResponseSchema,
   marketSkillListResponseSchema,
   marketSkillListQuerySchema,
   marketSkillVersionsResponseSchema,
@@ -43,12 +45,15 @@ import { RegistryNotFoundError, findPackageFile, findSkill, scanRegistry } from 
 import {
   MarketStore,
   canPublishFor,
+  getUserByPublishKey,
   hashDeveloperKey,
+  hashPublishKey,
   publicSubmission,
   publicSubmissions,
   type StoredDevRelease,
   type StoredDeveloperKey,
   type StoredEditWorkspace,
+  type StoredPublishKey,
 } from './market-store.js';
 import {
   packageExtensionFor,
@@ -183,6 +188,12 @@ const createDeveloperKeyBodySchema = z.object({
   expiresAt: z.string().datetime().optional(),
 });
 
+const createPublishKeyBodySchema = z.object({
+  name: z.string().min(1).max(120),
+  publisher: skillNameSchema,
+  expiresAt: z.string().datetime().optional(),
+});
+
 const reasonBodySchema = z.object({
   reason: z.string().min(1).max(2000),
 });
@@ -288,6 +299,13 @@ const publicDeveloperKey = (key: StoredDeveloperKey): MarketDeveloperKey =>
     keyHash: undefined,
   });
 
+const publicPublishKey = (key: StoredPublishKey, secret?: string) =>
+  marketPublishKeyResponseSchema.shape.publishKey.parse({
+    ...key,
+    keyHash: undefined,
+    secret,
+  });
+
 const isExpired = (expiresAt: string | undefined): boolean =>
   Boolean(expiresAt && Date.parse(expiresAt) <= Date.now());
 
@@ -369,6 +387,77 @@ const aggregateValues = (
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name));
 };
 
+export const generateMarketMd = (baseUrl: string): string => `---
+skillmarket: "1.0"
+baseUrl: "${baseUrl}"
+apiVersion: "v1"
+---
+
+# SkillMarket
+
+This is a SkillMarket instance. Tools can use this file to discover endpoints for installing and publishing Skills.
+
+## Install
+
+\`\`\`skill-market
+action: install
+baseUrl: ${baseUrl}
+api:
+  list:    GET /api/v1/skills
+  detail:  GET /api/v1/skills/{publisher}/{name}
+  package: GET /api/v1/skills/{publisher}/{name}/versions/{version}/package
+\`\`\`
+
+## Publish
+
+\`\`\`skill-market
+action: publish
+baseUrl: ${baseUrl}
+auth:
+  apiKey:
+    header: Authorization
+    format: "Bearer {key}"
+    manageUrl: ${baseUrl}/publisher/keys
+  login:
+    endpoint: POST /api/v1/auth/login
+    body: { email, password }
+    tokenPath: token
+api:
+  upload: POST /api/v1/publisher/submissions
+  submit: POST /api/v1/publisher/submissions/{id}/submit
+  status: GET /api/v1/publisher/submissions/{id}
+\`\`\`
+
+## Authentication
+
+To publish a Skill, you need a bearer token. Two methods are supported:
+
+**API Key (recommended for CI/CD and automated tools)**
+
+Generate a Publish Key at [${baseUrl}/publisher/keys](${baseUrl}/publisher/keys), then use it as a bearer token:
+
+\`\`\`
+Authorization: Bearer skpub_...
+\`\`\`
+
+**Login (interactive)**
+
+\`\`\`http
+POST ${baseUrl}/api/v1/auth/login
+Content-Type: application/json
+
+{ "email": "you@example.com", "password": "..." }
+\`\`\`
+
+The response includes a \`token\` field. Use it as \`Authorization: Bearer <token>\`.
+
+## Publish Workflow
+
+1. Upload package: \`POST /api/v1/publisher/submissions\` (multipart, field \`file\`)
+2. Submit for review: \`POST /api/v1/publisher/submissions/{id}/submit\`
+3. Check status: \`GET /api/v1/publisher/submissions/{id}\`
+`;
+
 export const createApp = (options: AppOptions = {}): FastifyInstance => {
   const app = Fastify({ logger: options.logger ?? false });
   const registryRoot = options.registryRoot ?? defaultRegistryRoot;
@@ -389,11 +478,16 @@ export const createApp = (options: AppOptions = {}): FastifyInstance => {
   });
 
   const requireUser = async (request: { headers: Record<string, unknown> }): Promise<MarketAuthUser> => {
-    const user = await store.getUserByToken(extractAuthToken(request));
-    if (!user) {
-      throw new HttpError(401, 'Authentication required');
+    const token = extractAuthToken(request);
+    const user = await store.getUserByToken(token);
+    if (user) {
+      return user;
     }
-    return user;
+    const publishKeyResult = await getUserByPublishKey(store, token);
+    if (publishKeyResult) {
+      return publishKeyResult.user;
+    }
+    throw new HttpError(401, 'Authentication required');
   };
 
   const requireAdmin = async (request: { headers: Record<string, unknown> }): Promise<MarketAuthUser> => {
@@ -1831,6 +1925,99 @@ export const createApp = (options: AppOptions = {}): FastifyInstance => {
       data.featuredSkillIds = data.featuredSkillIds.filter((id) => id !== `${publisher}/${name}`);
     });
     return { ok: true };
+  });
+
+  // Publish Keys
+
+  app.post('/api/v1/publisher/publish-keys', async (request, reply) => {
+    const user = await requireUser(request);
+    const body = createPublishKeyBodySchema.parse(request.body);
+    if (!canPublishFor(user, body.publisher)) {
+      throw new HttpError(403, 'Publisher access denied');
+    }
+
+    const secret = `skpub_${randomBytes(32).toString('base64url')}`;
+    const now = nowIso();
+    const key = await store.update((data) => {
+      const stored: StoredPublishKey = {
+        id: `pubkey_${randomUUID()}`,
+        name: body.name,
+        keyHash: hashPublishKey(secret),
+        publisher: body.publisher,
+        createdBy: user.id,
+        createdAt: now,
+        expiresAt: body.expiresAt,
+      };
+      data.publishKeys.push(stored);
+      return stored;
+    });
+    await store.addAuditLog({
+      actorUserId: user.id,
+      action: 'publish_key_create',
+      targetType: 'publish_key',
+      targetId: key.id,
+    });
+
+    return reply.code(201).send(marketPublishKeyResponseSchema.parse({
+      publishKey: publicPublishKey(key, secret),
+    }));
+  });
+
+  app.get('/api/v1/publisher/publish-keys', async (request) => {
+    const user = await requireUser(request);
+    const query = z.object({ publisher: skillNameSchema.optional() }).parse(request.query);
+    const data = await store.read();
+    const keys = data.publishKeys
+      .filter((key) => !query.publisher || key.publisher === query.publisher)
+      .filter((key) => canPublishFor(user, key.publisher))
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+      .map((key) => publicPublishKey(key));
+    return marketPublishKeyListResponseSchema.parse({ publishKeys: keys });
+  });
+
+  app.post('/api/v1/publisher/publish-keys/:keyId/revoke', async (request) => {
+    const user = await requireUser(request);
+    const keyId = (request.params as { keyId?: string }).keyId;
+    if (!keyId) {
+      throw new HttpError(400, 'Key id is required');
+    }
+    const data = await store.read();
+    const key = data.publishKeys.find((entry) => entry.id === keyId);
+    if (!key) {
+      throw new HttpError(404, 'Publish key not found');
+    }
+    if (!canPublishFor(user, key.publisher)) {
+      throw new HttpError(403, 'Publisher access denied');
+    }
+    const updated = await store.update((current) => {
+      const stored = current.publishKeys.find((entry) => entry.id === keyId);
+      if (!stored) {
+        throw new HttpError(404, 'Publish key not found');
+      }
+      stored.revokedAt = nowIso();
+      return stored;
+    });
+    await store.addAuditLog({
+      actorUserId: user.id,
+      action: 'publish_key_revoke',
+      targetType: 'publish_key',
+      targetId: updated.id,
+    });
+    return marketPublishKeyResponseSchema.parse({ publishKey: publicPublishKey(updated) });
+  });
+
+  // market.md
+
+  app.get('/market.md', async (request, reply) => {
+    const host = request.headers.host ?? 'localhost:3100';
+    const proto = (request.headers['x-forwarded-proto'] as string | undefined) ?? 'http';
+    const baseUrl = `${proto}://${host}`;
+
+    const content = generateMarketMd(baseUrl);
+    return reply
+      .type('text/markdown; charset=utf-8')
+      .header('cache-control', 'public, max-age=60')
+      .send(content);
   });
 
   app.setErrorHandler((error, _request, reply) => {

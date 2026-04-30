@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 const NAV_ITEMS = [
   { to: '/publisher/skills', label: '我的提交' },
   { to: '/publish', label: '+ 新建提交' },
+  { to: '/publisher/keys', label: 'Publish Keys' },
 ];
 
 export default function PublisherLayout() {

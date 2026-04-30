@@ -11,6 +11,7 @@ import {
   type MarketPackageFileEntry,
   type MarketPackageInfo,
   type MarketPackageValidation,
+  type MarketPublishKey,
   type MarketSubmission,
   type MarketSubmissionStatus,
   type MarketUserRole,
@@ -53,6 +54,10 @@ export type StoredDeveloperKey = MarketDeveloperKey & {
   keyHash: string;
 };
 
+export type StoredPublishKey = Omit<MarketPublishKey, 'secret'> & {
+  keyHash: string;
+};
+
 export type AuditLogEntry = {
   id: string;
   actorUserId: string;
@@ -70,6 +75,7 @@ export type MarketData = {
   editWorkspaces: StoredEditWorkspace[];
   devReleases: StoredDevRelease[];
   developerKeys: StoredDeveloperKey[];
+  publishKeys: StoredPublishKey[];
   featuredSkillIds: string[];
   auditLogs: AuditLogEntry[];
 };
@@ -92,6 +98,7 @@ const emptyData = (): MarketData => ({
   editWorkspaces: [],
   devReleases: [],
   developerKeys: [],
+  publishKeys: [],
   featuredSkillIds: [],
   auditLogs: [],
 });
@@ -112,6 +119,7 @@ const normalizeData = (input: Partial<MarketData>): MarketData => ({
   editWorkspaces: input.editWorkspaces ?? [],
   devReleases: input.devReleases ?? [],
   developerKeys: input.developerKeys ?? [],
+  publishKeys: input.publishKeys ?? [],
   featuredSkillIds: input.featuredSkillIds ?? [],
   auditLogs: input.auditLogs ?? [],
 });
@@ -428,3 +436,34 @@ export const canPublishFor = (user: MarketAuthUser, publisher: string | undefine
 };
 
 export const hashDeveloperKey = (secret: string): string => sha256(secret);
+
+export const hashPublishKey = (secret: string): string => sha256(secret);
+
+export const getUserByPublishKey = async (
+  store: MarketStore,
+  secret: string | undefined,
+): Promise<{ user: MarketAuthUser; key: StoredPublishKey } | null> => {
+  if (!secret) {
+    return null;
+  }
+  const data = await store.read();
+  const keyHash = hashPublishKey(secret);
+  const key = data.publishKeys.find((entry) => entry.keyHash === keyHash);
+  if (!key || key.revokedAt) {
+    return null;
+  }
+  if (key.expiresAt && Date.parse(key.expiresAt) <= Date.now()) {
+    return null;
+  }
+  const user = data.users.find((entry) => entry.publishers.includes(key.publisher));
+  if (!user) {
+    return null;
+  }
+  await store.update((current) => {
+    const stored = current.publishKeys.find((entry) => entry.id === key.id);
+    if (stored) {
+      stored.lastUsedAt = toIso();
+    }
+  });
+  return { user: toPublicUser(user), key };
+};

@@ -358,6 +358,26 @@ export const marketDeveloperKeyListResponseSchema = z.object({
   developerKeys: z.array(marketDeveloperKeySchema),
 });
 
+export const marketPublishKeySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  secret: z.string().min(1).optional(),
+  publisher: skillNameSchema,
+  createdBy: z.string().min(1),
+  createdAt: z.string(),
+  expiresAt: z.string().optional(),
+  revokedAt: z.string().optional(),
+  lastUsedAt: z.string().optional(),
+});
+
+export const marketPublishKeyResponseSchema = z.object({
+  publishKey: marketPublishKeySchema,
+});
+
+export const marketPublishKeyListResponseSchema = z.object({
+  publishKeys: z.array(marketPublishKeySchema),
+});
+
 export const marketPublisherSkillsResponseSchema = z.object({
   skills: z.array(marketSkillSummarySchema),
   submissions: z.array(marketSubmissionSchema),
@@ -434,6 +454,9 @@ export type MarketPublisherSkillsResponse = z.infer<typeof marketPublisherSkills
 export type MarketPublisherSkillResponse = z.infer<typeof marketPublisherSkillResponseSchema>;
 export type MarketAuthResponse = z.infer<typeof marketAuthResponseSchema>;
 export type MarketMeResponse = z.infer<typeof marketMeResponseSchema>;
+export type MarketPublishKey = z.infer<typeof marketPublishKeySchema>;
+export type MarketPublishKeyResponse = z.infer<typeof marketPublishKeyResponseSchema>;
+export type MarketPublishKeyListResponse = z.infer<typeof marketPublishKeyListResponseSchema>;
 
 export const parseSkillManifest = (input: unknown): SkillManifest =>
   skillManifestSchema.parse(input);

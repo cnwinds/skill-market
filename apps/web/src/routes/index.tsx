@@ -10,11 +10,13 @@ import PublishPage from '../features/publisher/PublishPage';
 import PublisherLayout from '../features/publisher/PublisherLayout';
 import MySkillsPage from '../features/publisher/MySkillsPage';
 import SubmissionPage from '../features/publisher/SubmissionPage';
+import PublishKeysPage from '../features/publisher/PublishKeysPage';
 import CreateWorkspacePage from '../features/editor/CreateWorkspacePage';
 import SkillEditorPage from '../features/editor/SkillEditorPage';
 import AdminLayout from '../features/admin/AdminLayout';
 import ReviewQueuePage from '../features/admin/ReviewQueuePage';
 import ReviewDetailPage from '../features/admin/ReviewDetailPage';
+import MarketPage from '../features/market/MarketPage';
 
 function RootLayout() {
   return (
@@ -34,6 +36,7 @@ export default function AppRouter() {
           <Route index element={<HomePage />} />
           <Route path="skills" element={<SkillListPage />} />
           <Route path="skills/:publisher/:name" element={<SkillDetailPage />} />
+          <Route path="market" element={<MarketPage />} />
 
           <Route
             path="publish"
@@ -73,6 +76,7 @@ export default function AppRouter() {
             <Route index element={<Navigate to="skills" replace />} />
             <Route path="skills" element={<MySkillsPage />} />
             <Route path="submissions/:id" element={<SubmissionPage />} />
+            <Route path="keys" element={<PublishKeysPage />} />
           </Route>
 
           {/* Admin section */}

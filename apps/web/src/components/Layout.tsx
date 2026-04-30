@@ -46,6 +46,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 提交 Skill
               </NavLink>
+              <NavLink
+                to="/market"
+                className={({ isActive }) =>
+                  `px-3 py-1.5 rounded-md ${isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`
+                }
+              >
+                协议
+              </NavLink>
               {user?.roles.includes('admin') && (
                 <NavLink
                   to="/admin/reviews"
@@ -96,7 +104,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
             <p>SkillMarket — SkillChat 技能扩展分发平台</p>
             <div className="flex items-center gap-4">
-              <a href="/api/v1/skills" className="hover:text-gray-700">API 文档</a>
+              <a href="/market" className="hover:text-gray-700">协议</a>
+              <a href="/api/v1/skills" className="hover:text-gray-700">API</a>
               <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">GitHub</a>
             </div>
           </div>
