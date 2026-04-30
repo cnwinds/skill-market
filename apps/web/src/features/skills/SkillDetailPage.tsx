@@ -5,6 +5,7 @@ import ErrorState from '../../components/ErrorState';
 import PermissionBadge from '../../components/PermissionBadge';
 import KindBadge from '../../components/KindBadge';
 import JsonViewer from '../../components/JsonViewer';
+import CopyButton from '../../components/CopyButton';
 import { useAuth } from '../auth/useAuth';
 
 type Tab = 'overview' | 'permissions' | 'versions' | 'manifest';
@@ -30,7 +31,7 @@ export default function SkillDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-4 animate-pulse">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4 animate-pulse">
         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
         <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -40,7 +41,7 @@ export default function SkillDetailPage() {
 
   if (isError || !skill) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ErrorState message="无法加载 Skill 详情" onRetry={() => refetch()} />
       </div>
     );
@@ -61,9 +62,25 @@ export default function SkillDetailPage() {
     ? skillsApi.packageUrl(publisher!, name!, latest.version)
     : null;
   const canEdit = Boolean(user && publisher && (user.roles.includes('admin') || user.publishers.includes(publisher)));
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const installPrompt = latest
+    ? `请从 SkillMarket 自动安装这个正式版 Skill：
+
+市场发现文件：${baseUrl}/.well-known/skill-market.md
+Skill ID：${skill.id}
+版本：${latest.version}
+
+要求：
+1. 先读取市场发现文件，解析 action: install 的接口。
+2. 读取这个 Skill 的详情，确认版本和 manifest。
+3. 下载 ${skill.id}@${latest.version} 的 package。
+4. 用响应头 X-Skill-Sha256 校验下载文件。
+5. 安装到当前工具或 SkillChat 支持的本地 Skill 目录；如果你不知道目录，先问我。
+6. 完成后告诉我安装位置、Skill ID、版本和校验结果。`
+    : '';
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm mb-6">
         <Link to="/" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">首页</Link>
@@ -143,6 +160,13 @@ export default function SkillDetailPage() {
                 下载包
               </a>
             )}
+            {latest && (
+              <CopyButton
+                value={installPrompt}
+                idleLabel="复制安装提示词"
+                className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-blue-300 px-4 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-900/30"
+              />
+            )}
             <button
               onClick={() => setTab('manifest')}
               className="flex items-center gap-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -155,9 +179,12 @@ export default function SkillDetailPage() {
 
       {/* Install hint */}
       {latest && (
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-6 font-mono text-xs text-gray-700 dark:text-gray-300 flex items-center gap-2 overflow-x-auto">
-          <span className="text-gray-400 dark:text-gray-500 shrink-0">安装 ID：</span>
-          <code className="select-all">{skill.id}@{latest.version}</code>
+        <div className="mb-6 flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 font-mono text-xs text-gray-700 dark:text-gray-300">
+            <span className="text-gray-400 dark:text-gray-500">安装 ID：</span>
+            <code className="select-all break-all">{skill.id}@{latest.version}</code>
+          </div>
+          <CopyButton value={installPrompt} idleLabel="复制给工具安装" />
         </div>
       )}
 

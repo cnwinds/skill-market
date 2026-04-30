@@ -4,7 +4,8 @@ import { Link, useParams } from 'react-router-dom';
 import { editorApi } from '../../api/editor';
 import { useAuth } from '../auth/useAuth';
 import ErrorState from '../../components/ErrorState';
-import type { MarketWorkspaceFileEntry } from '@qizhi/skill-spec';
+import CopyButton from '../../components/CopyButton';
+import type { MarketDeveloperKey, MarketDevRelease, MarketWorkspaceFileEntry } from '@qizhi/skill-spec';
 
 export default function SkillEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -130,12 +131,12 @@ export default function SkillEditorPage() {
   }, [currentDir]);
 
   if (workspaceQuery.isLoading) {
-    return <div className="max-w-7xl mx-auto px-4 py-8 text-sm text-gray-500 dark:text-gray-400">加载中...</div>;
+    return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-gray-500 dark:text-gray-400">加载中...</div>;
   }
 
   if (workspaceQuery.isError || !workspace) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ErrorState message="无法加载编辑工作区" onRetry={() => workspaceQuery.refetch()} />
       </div>
     );
@@ -164,6 +165,11 @@ export default function SkillEditorPage() {
     if (!name) return;
     createKeyMutation.mutate(name);
   };
+
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const devReleases = devReleasesQuery.data?.devReleases ?? [];
+  const developerKeys = developerKeysQuery.data?.developerKeys ?? [];
+  const activeDevKey = developerKeys.find((key) => !key.revokedAt && (!key.expiresAt || Date.parse(key.expiresAt) > Date.now()));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -323,8 +329,11 @@ export default function SkillEditorPage() {
                 生成
               </button>
             </div>
+            <div className="mb-3 rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs leading-5 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+              开发版仅用于本地测试，未经过正式上架审核。安装时建议使用临时目录，不要覆盖正式版。
+            </div>
             <div className="space-y-2">
-              {(devReleasesQuery.data?.devReleases ?? []).slice(0, 5).map((release) => (
+              {devReleases.slice(0, 5).map((release) => (
                 <div key={release.id} className="border border-gray-100 dark:border-gray-700 rounded px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
                     <code className="text-xs font-mono text-gray-800 dark:text-gray-200">{release.version}</code>
@@ -333,10 +342,19 @@ export default function SkillEditorPage() {
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     {new Date(release.createdAt).toLocaleString('zh-CN')}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <CopyButton
+                      value={buildDevInstallPrompt(release, activeDevKey, baseUrl)}
+                      idleLabel="复制安装提示词"
+                    />
+                    {!activeDevKey && (
+                      <span className="text-xs text-yellow-600 dark:text-yellow-300">先新建 Developer Key</span>
+                    )}
+                  </div>
                 </div>
               ))}
-              {devReleasesQuery.data?.devReleases.length === 0 && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">暂无开发版本</p>
+              {devReleases.length === 0 && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">暂无开发版本。先点击“生成”，再复制安装提示词给工具。</p>
               )}
             </div>
           </section>
@@ -349,23 +367,26 @@ export default function SkillEditorPage() {
               </button>
             </div>
             <div className="space-y-2">
-              {(developerKeysQuery.data?.developerKeys ?? []).map((key) => (
+              {developerKeys.map((key) => (
                 <div key={key.id} className="border border-gray-100 dark:border-gray-700 rounded px-3 py-2">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{key.name}</span>
-                    <button
-                      onClick={() => revokeKeyMutation.mutate(key.id)}
-                      disabled={Boolean(key.revokedAt)}
-                      className="text-xs text-red-600 dark:text-red-400 hover:underline disabled:text-gray-300 dark:disabled:text-gray-600"
-                    >
-                      吊销
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <CopyButton value={key.secret} idleLabel="复制 Key" />
+                      <button
+                        onClick={() => revokeKeyMutation.mutate(key.id)}
+                        disabled={Boolean(key.revokedAt)}
+                        className="text-xs text-red-600 dark:text-red-400 hover:underline disabled:text-gray-300 dark:disabled:text-gray-600"
+                      >
+                        吊销
+                      </button>
+                    </div>
                   </div>
                   <code className="block text-xs font-mono text-gray-500 dark:text-gray-400 break-all select-all">{key.secret}</code>
                 </div>
               ))}
-              {developerKeysQuery.data?.developerKeys.length === 0 && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">暂无 Key</p>
+              {developerKeys.length === 0 && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">暂无 Key。工具下载开发版必须使用 Developer Key。</p>
               )}
             </div>
           </section>
@@ -373,6 +394,30 @@ export default function SkillEditorPage() {
       </div>
     </div>
   );
+}
+
+function buildDevInstallPrompt(release: MarketDevRelease, key: MarketDeveloperKey | undefined, baseUrl: string) {
+  const packageUrl = `${baseUrl}${release.packageUrl}`;
+  const keyText = key?.secret ?? '<先在页面新建 Developer Key，然后粘贴 skdev_...>';
+
+  return `请从 SkillMarket 安装这个开发版 Skill，用于本地测试：
+
+Skill ID：${release.skillId}
+开发版本：${release.version}
+下载地址：${packageUrl}
+Developer Key：${keyText}
+
+风险提醒：
+1. 这是开发版，不是正式上架版本，可能未经完整审核。
+2. 安装到临时/开发目录，不要覆盖正式版，除非我明确确认。
+3. 测试结束后保留或删除都要告诉我。
+
+安装要求：
+1. 请求下载地址时使用请求头：X-Skill-Dev-Key: ${keyText}
+2. 下载 package.tgz。
+3. 使用响应头 X-Skill-Sha256 校验文件。
+4. 将包安装到当前工具或 SkillChat 支持的本地开发 Skill 目录；如果你不知道目录，先问我。
+5. 完成后告诉我安装位置、Skill ID、开发版本和校验结果。`;
 }
 
 function FileRow({

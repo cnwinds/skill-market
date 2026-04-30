@@ -54,7 +54,7 @@ export type StoredDeveloperKey = MarketDeveloperKey & {
   keyHash: string;
 };
 
-export type StoredPublishKey = Omit<MarketPublishKey, 'secret'> & {
+export type StoredPublishKey = MarketPublishKey & {
   keyHash: string;
 };
 

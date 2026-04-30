@@ -1,38 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import CopyButton from '../../components/CopyButton';
 
-function CodeBlock({ children, title }: { children: string; title?: string }) {
+function InlineCode({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {title && (
-        <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-          <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">{title}</span>
-        </div>
-      )}
-      <pre className="bg-gray-900 dark:bg-gray-950 text-gray-100 p-4 overflow-x-auto text-xs font-mono leading-relaxed">
-        <code>{children}</code>
-      </pre>
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="mb-10">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">{title}</h2>
+    <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200">
       {children}
-    </section>
+    </code>
   );
 }
 
-function Field({ name, desc }: { name: string; desc: string }) {
+function ActionLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
-    <tr>
-      <td className="py-1.5 pr-4 align-top">
-        <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-gray-800 dark:text-gray-200">{name}</code>
-      </td>
-      <td className="py-1.5 text-sm text-gray-600 dark:text-gray-400">{desc}</td>
-    </tr>
+    <Link
+      to={to}
+      className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -48,11 +33,20 @@ export default function MarketPage() {
   });
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const discoveryUrl = `${baseUrl}/.well-known/skill-market.md`;
+  const toolPrompt = `你是一个 SkillMarket 自动化助手。下面是这个市场的发现文件内容，请先理解其中的安装和发布接口。之后我只会告诉你我要安装哪个 Skill，或者我要上传哪个本地包，你按发现文件里的接口自动完成。
+
+使用规则：
+1. 安装正式版 Skill：搜索或解析 publisher/name，下载最新版本 package，校验 X-Skill-Sha256，然后安装到当前工具支持的 Skill 目录；如果不知道目录，先问我。
+2. 上传正式版 Skill：使用我提供的 skpub_ Publish Key，按 Authorization: Bearer {key} 请求；multipart/form-data 的文件字段必须叫 file；预检有 errors 就停止；通过后提交审核并告诉我 submission id 和状态。
+3. 安装开发版 Skill：必须使用我提供的 skdev_ Developer Key，请求头是 X-Skill-Dev-Key；开发版只用于本地测试，不要当成正式版本。
+4. 不要把 key 写进代码、仓库、日志或 URL query。
+
+${rawMd ?? `请读取 ${discoveryUrl} 获取发现文件。`}`;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm mb-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6 flex items-center gap-2 text-sm">
         <Link to="/" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">首页</Link>
         <span className="text-gray-300 dark:text-gray-600">/</span>
         <span className="text-gray-900 dark:text-gray-100">开发文档</span>
@@ -60,126 +54,96 @@ export default function MarketPage() {
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">开发文档</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
-          了解如何通过 API 搜索、安装和发布 Skill。工具可通过{' '}
-          <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-xs font-mono">/.well-known/skill-market.md</code>{' '}
-          自动发现本平台的端点。
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400">
+          只需要选一种方式：给工具用就复制提示词；人工操作就点页面入口。
         </p>
       </div>
 
-      <Section title="端点发现">
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-          工具通过{' '}
-          <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">GET /.well-known/skill-market.md</code>{' '}
-          获取发现文件，解析其中的{' '}
-          <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">skill-market</code>{' '}
-          代码块来发现端点。
-        </p>
-        {isLoading && <p className="text-sm text-gray-400 dark:text-gray-500">加载中...</p>}
-        {error && <p className="text-sm text-red-500">加载失败</p>}
-        {rawMd && (
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-              <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">GET /.well-known/skill-market.md</span>
-              <a
-                href="/.well-known/skill-market.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-500 dark:text-blue-400 hover:underline"
-              >
-                查看原始文件
-              </a>
+      <section className="mb-10">
+        <p className="mb-1 text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">for tools</p>
+        <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-2 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">给工具用</h2>
+          <CopyButton value={toolPrompt} idleLabel="复制工具提示词" />
+        </div>
+
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">1. 复制</div>
+              <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                点击上面的“复制工具提示词”。提示词里已经包含市场发现文件内容。
+              </p>
             </div>
-            <pre className="p-4 text-xs font-mono text-gray-700 dark:text-gray-300 overflow-x-auto leading-relaxed bg-white dark:bg-gray-900 max-h-64 overflow-y-auto">
-              {rawMd}
-            </pre>
+            <div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">2. 粘贴</div>
+              <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                贴到 Claude Code、SkillChat 或其他能联网/读写文件的工具。
+              </p>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">3. 下命令</div>
+              <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                例如：安装 <InlineCode>official/xlsx</InlineCode>，或上传 <InlineCode>package.tgz</InlineCode>。
+              </p>
+            </div>
           </div>
-        )}
-      </Section>
+          <pre className="mt-4 max-h-48 overflow-auto rounded-md bg-gray-50 p-3 font-mono text-xs leading-relaxed text-gray-700 dark:bg-gray-900 dark:text-gray-300">
+            {toolPrompt}
+          </pre>
+        </div>
+      </section>
 
-      <Section title="安装 Skill">
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">安装不需要认证，直接调用公开 API。</p>
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">1. 搜索 Skill</p>
-            <CodeBlock>{`GET ${baseUrl}/api/v1/skills?query=pdf&kind=instruction`}</CodeBlock>
+      <section className="mb-10">
+        <p className="mb-1 text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">for humans</p>
+        <h2 className="mb-4 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-900 dark:border-gray-700 dark:text-gray-100">人工操作</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">安装正式版 Skill</h3>
+            <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+              去探索页，打开 Skill 详情，下载包，然后导入本地工具。
+            </p>
+            <div className="mt-4">
+              <ActionLink to="/skills">去探索</ActionLink>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">2. 下载包</p>
-            <CodeBlock>{`GET ${baseUrl}/api/v1/skills/{publisher}/{name}/versions/{version}/package`}</CodeBlock>
+          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">上传正式版 Skill</h3>
+            <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+              登录后上传包，预检通过后提交审核。自动化发布先创建 Publish Key。
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <ActionLink to="/publish">上传 Skill</ActionLink>
+              <Link to="/publisher/keys" className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
+                Publish Keys
+              </Link>
+            </div>
           </div>
         </div>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
-          响应头包含 <code className="font-mono">X-Skill-Sha256</code>，下载后请验证校验和。
-        </p>
-      </Section>
+      </section>
 
-      <Section title="发布 Skill">
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">发布需要认证。推荐使用 Publish Key，适合 CI/CD 和自动化工具。</p>
-
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">认证方式一：Publish Key（推荐）</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-          在 <Link to="/publisher/keys" className="text-blue-500 dark:text-blue-400 hover:underline">发布者控制台 &rarr; Publish Keys</Link> 创建 Key，然后用作 Bearer Token：
-        </p>
-        <CodeBlock>{`Authorization: Bearer skpub_...`}</CodeBlock>
-
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-5 mb-2">认证方式二：登录获取 Token</h3>
-        <CodeBlock>{`POST ${baseUrl}/api/v1/auth/login
-Content-Type: application/json
-
-{ "email": "you@example.com", "password": "..." }
-
-# 响应中的 token 字段即为 Bearer Token`}</CodeBlock>
-
-        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-6 mb-3">发布流程</h3>
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">1. 上传包</p>
-            <CodeBlock>{`POST ${baseUrl}/api/v1/publisher/submissions
-Authorization: Bearer <token>
-Content-Type: multipart/form-data
-
-file: package.tgz   # 或 package.zip`}</CodeBlock>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">2. 提交审核</p>
-            <CodeBlock>{`POST ${baseUrl}/api/v1/publisher/submissions/{id}/submit
-Authorization: Bearer <token>`}</CodeBlock>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">3. 查询状态</p>
-            <CodeBlock>{`GET ${baseUrl}/api/v1/publisher/submissions/{id}
-Authorization: Bearer <token>
-
-# status: draft → pending_review → published | rejected`}</CodeBlock>
-          </div>
+      <details className="rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
+          工具调试信息
+        </summary>
+        <div className="border-t border-gray-200 p-4 dark:border-gray-700">
+          <p className="mb-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
+            工具优先读取 <InlineCode>/.well-known/skill-market.md</InlineCode>。人工用户通常不需要看这里。
+          </p>
+          {isLoading && <p className="text-sm text-gray-400 dark:text-gray-500">加载中...</p>}
+          {error && <p className="text-sm text-red-500">加载失败</p>}
+          {rawMd && (
+            <>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="font-mono text-xs text-gray-500 dark:text-gray-400">GET /.well-known/skill-market.md</span>
+                <CopyButton value={rawMd} idleLabel="复制 md" />
+              </div>
+              <pre className="max-h-80 overflow-auto rounded-md bg-gray-50 p-3 font-mono text-xs leading-relaxed text-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                {rawMd}
+              </pre>
+            </>
+          )}
         </div>
-      </Section>
-
-      <Section title="包格式">
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-          Skill 包是 <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">.tgz</code> 或 <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">.zip</code> 文件，根目录必须包含 manifest 文件：
-        </p>
-        <table className="w-full text-sm mb-3">
-          <tbody>
-            <Field name="skill.json" desc="Skill manifest（推荐路径）" />
-            <Field name="manifest.json" desc="Skill manifest（备用路径）" />
-            <Field name="package/skill.json" desc="嵌套在 package/ 目录下也支持" />
-          </tbody>
-        </table>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">manifest 必填字段：</p>
-        <table className="w-full text-sm">
-          <tbody>
-            <Field name="skillSpecVersion" desc='"1.0"' />
-            <Field name="id" desc="publisher/name 格式，例如 alice/pdf-reader" />
-            <Field name="name" desc="小写字母和连字符，2-64 字符" />
-            <Field name="version" desc="语义化版本，例如 1.0.0" />
-            <Field name="kind" desc="instruction | runtime | hybrid" />
-            <Field name="description" desc="1-500 字符" />
-            <Field name="author.name" desc="作者名称" />
-          </tbody>
-        </table>
-      </Section>
+      </details>
     </div>
   );
 }

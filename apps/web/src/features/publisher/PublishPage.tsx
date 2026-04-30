@@ -56,7 +56,8 @@ export default function PublishPage() {
   const canSubmit = submission && confirmOwnership && confirmSpec && !submitMutation.isPending;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">提交 Skill</h1>
       <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">上传 .tgz 包，经审核通过后即可公开发布。</p>
 
@@ -240,6 +241,7 @@ export default function PublishPage() {
         >
           {submitMutation.isPending ? '提交中…' : '提交审核'}
         </button>
+      </div>
       </div>
     </div>
   );

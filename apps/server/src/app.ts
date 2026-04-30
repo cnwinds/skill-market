@@ -303,7 +303,7 @@ const publicPublishKey = (key: StoredPublishKey, secret?: string) =>
   marketPublishKeyResponseSchema.shape.publishKey.parse({
     ...key,
     keyHash: undefined,
-    secret,
+    secret: secret ?? key.secret,
   });
 
 const isExpired = (expiresAt: string | undefined): boolean =>
@@ -397,6 +397,8 @@ apiVersion: "v1"
 
 This is a SkillMarket instance. Tools can use this file to discover endpoints for installing and publishing Skills.
 
+Tools should parse fenced code blocks with language \`skill-market\`. Human-readable prose explains the expected workflow and safety checks.
+
 ## Install
 
 \`\`\`skill-market
@@ -406,7 +408,51 @@ api:
   list:    GET /api/v1/skills
   detail:  GET /api/v1/skills/{publisher}/{name}
   package: GET /api/v1/skills/{publisher}/{name}/versions/{version}/package
+query:
+  list: [query, kind, tag, category, publisher, sort, limit]
+packageHeaders:
+  skillId: X-Skill-Id
+  version: X-Skill-Version
+  sha256: X-Skill-Sha256
 \`\`\`
+
+## Tool Install Workflow
+
+1. If the user provides a keyword, call \`GET /api/v1/skills?query=...\` and ask the user to confirm the intended Skill.
+2. If the user provides \`publisher/name\`, call \`GET /api/v1/skills/{publisher}/{name}\` directly.
+3. Resolve the version to install. Use the latest version unless the user asks for a specific version.
+4. Download the package with \`GET /api/v1/skills/{publisher}/{name}/versions/{version}/package\`.
+5. Verify the downloaded file with the \`X-Skill-Sha256\` response header.
+6. Install the package into the local Skill directory supported by the current tool or SkillChat. If the tool does not know the target directory, ask the user before writing files.
+
+## Development Install
+
+\`\`\`skill-market
+action: dev-install
+baseUrl: ${baseUrl}
+auth:
+  devKey:
+    header: X-Skill-Dev-Key
+    format: "{key}"
+api:
+  list:    GET /api/v1/dev/skills/{publisher}/{name}
+  versions: GET /api/v1/dev/skills/{publisher}/{name}/versions
+  manifest: GET /api/v1/dev/skills/{publisher}/{name}/versions/{version}/manifest
+  package: GET /api/v1/dev/skills/{publisher}/{name}/versions/{version}/package
+versionAliases: [dev, latest-dev]
+packageHeaders:
+  skillId: X-Skill-Id
+  version: X-Skill-Version
+  sha256: X-Skill-Sha256
+  channel: X-Skill-Channel
+\`\`\`
+
+## Tool Development Install Workflow
+
+1. Development versions require \`X-Skill-Dev-Key: skdev_...\`.
+2. Use a specific dev version when provided. Otherwise \`dev\` or \`latest-dev\` resolves to the newest active development version.
+3. Verify \`X-Skill-Sha256\` after downloading.
+4. Treat development packages as unsafe for production. Install into a temporary or development Skill directory and do not overwrite a public version unless the user explicitly confirms.
 
 ## Publish
 
@@ -426,6 +472,9 @@ api:
   upload: POST /api/v1/publisher/submissions
   submit: POST /api/v1/publisher/submissions/{id}/submit
   status: GET /api/v1/publisher/submissions/{id}
+package:
+  field: file
+  formats: [package.tgz, package.tar.gz, package.zip]
 \`\`\`
 
 ## Authentication
@@ -451,11 +500,18 @@ Content-Type: application/json
 
 The response includes a \`token\` field. Use it as \`Authorization: Bearer <token>\`.
 
-## Publish Workflow
+## Tool Publish Workflow
 
-1. Upload package: \`POST /api/v1/publisher/submissions\` (multipart, field \`file\`)
-2. Submit for review: \`POST /api/v1/publisher/submissions/{id}/submit\`
-3. Check status: \`GET /api/v1/publisher/submissions/{id}\`
+1. Read the \`action: publish\` block and choose an authentication method. Prefer Publish Key for tools and CI/CD.
+2. Upload package: \`POST /api/v1/publisher/submissions\` with \`multipart/form-data\`; the file field must be named \`file\`.
+3. Inspect the returned validation result. If \`validation.errors\` is not empty, stop and report the errors.
+4. Submit for review: \`POST /api/v1/publisher/submissions/{id}/submit\`.
+5. Check status: \`GET /api/v1/publisher/submissions/{id}\`. Publishing is not complete until the submission reaches \`published\`.
+
+## Human Workflow
+
+- Install manually: search the web UI, open the Skill detail page, download the package, and import it into the target tool.
+- Publish manually: log in, open \`${baseUrl}/publish\`, upload a package, review validation results, and submit it for human review.
 `;
 
 export const createApp = (options: AppOptions = {}): FastifyInstance => {
@@ -1942,6 +1998,7 @@ export const createApp = (options: AppOptions = {}): FastifyInstance => {
       const stored: StoredPublishKey = {
         id: `pubkey_${randomUUID()}`,
         name: body.name,
+        secret,
         keyHash: hashPublishKey(secret),
         publisher: body.publisher,
         createdBy: user.id,

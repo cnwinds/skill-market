@@ -45,6 +45,12 @@ api:
   list:    GET /api/v1/skills
   detail:  GET /api/v1/skills/{publisher}/{name}
   package: GET /api/v1/skills/{publisher}/{name}/versions/{version}/package
+query:
+  list: [query, kind, tag, category, publisher, sort, limit]
+packageHeaders:
+  skillId: X-Skill-Id
+  version: X-Skill-Version
+  sha256: X-Skill-Sha256
 ```
 
 | Field | Description |
@@ -53,6 +59,8 @@ api:
 | `api.list` | List/search skills. Supports query params: `query`, `kind`, `tag`, `category`, `publisher`, `sort`, `limit` |
 | `api.detail` | Get skill detail and all versions |
 | `api.package` | Download the skill package (`.tgz` or `.zip`) |
+| `query.list` | Optional machine-readable list of supported list query params |
+| `packageHeaders` | Optional response headers tools should use when verifying downloaded packages |
 
 #### action: publish
 
@@ -74,6 +82,9 @@ api:
   upload: POST /api/v1/publisher/submissions
   submit: POST /api/v1/publisher/submissions/{id}/submit
   status: GET /api/v1/publisher/submissions/{id}
+package:
+  field: file
+  formats: [package.tgz, package.tar.gz, package.zip]
 ```
 
 | Field | Description |
@@ -89,6 +100,34 @@ api:
 | `api.upload` | Upload a package (`multipart/form-data`, field `file`) |
 | `api.submit` | Submit the uploaded package for review |
 | `api.status` | Check submission status |
+| `package.field` | Multipart file field name |
+| `package.formats` | Supported upload package formats |
+
+#### action: dev-install
+
+Describes how tools can download private development versions for local testing.
+
+```yaml
+action: dev-install
+baseUrl: https://market.example.com
+auth:
+  devKey:
+    header: X-Skill-Dev-Key
+    format: "{key}"
+api:
+  list:    GET /api/v1/dev/skills/{publisher}/{name}
+  versions: GET /api/v1/dev/skills/{publisher}/{name}/versions
+  manifest: GET /api/v1/dev/skills/{publisher}/{name}/versions/{version}/manifest
+  package: GET /api/v1/dev/skills/{publisher}/{name}/versions/{version}/package
+versionAliases: [dev, latest-dev]
+packageHeaders:
+  skillId: X-Skill-Id
+  version: X-Skill-Version
+  sha256: X-Skill-Sha256
+  channel: X-Skill-Channel
+```
+
+Tools must use `X-Skill-Dev-Key`, verify `X-Skill-Sha256`, and treat development packages as local-test-only. Development installs should not overwrite public installs unless the user explicitly confirms.
 
 ## Publish Workflow
 
@@ -103,7 +142,7 @@ Tools implementing publish support must follow this sequence:
 
 ### API Key (recommended)
 
-Generate a Publish Key in the web UI at the URL given in `auth.apiKey.manageUrl`. Keys are prefixed `skpub_` and are shown only once on creation.
+Generate a Publish Key in the web UI at the URL given in `auth.apiKey.manageUrl`. Keys are prefixed `skpub_` and can be copied again by the owning publisher or an admin.
 
 Use the key as a bearer token on every request:
 

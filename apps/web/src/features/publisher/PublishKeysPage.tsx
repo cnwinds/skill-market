@@ -14,7 +14,7 @@ function NewKeySecret({ secret, onDone }: { secret: string; onDone: () => void }
 
   return (
     <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4 mb-6">
-      <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">Key 已创建，请立即复制保存，关闭后不再显示</p>
+      <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">Key 已创建，可以立即复制，也可以稍后在列表中再次复制</p>
       <div className="flex items-center gap-2">
         <code className="flex-1 text-xs bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 rounded px-3 py-2 font-mono break-all select-all text-gray-900 dark:text-gray-100">
           {secret}
@@ -28,6 +28,48 @@ function NewKeySecret({ secret, onDone }: { secret: string; onDone: () => void }
       </div>
       <button onClick={onDone} className="mt-3 text-xs text-green-700 dark:text-green-300 hover:underline">
         我已保存，关闭
+      </button>
+    </div>
+  );
+}
+
+function formatDateTime(value?: string) {
+  if (!value) return '未使用';
+  return new Date(value).toLocaleString('zh-CN');
+}
+
+function maskSecret(secret: string) {
+  if (secret.length <= 18) return secret;
+  return `${secret.slice(0, 12)}...${secret.slice(-6)}`;
+}
+
+function CopyKeyButton({ secret }: { secret?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  if (!secret) {
+    return (
+      <span className="text-xs text-gray-400 dark:text-gray-500">
+        旧 Key 未保存明文
+      </span>
+    );
+  }
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(secret);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <code className="max-w-[260px] truncate rounded border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+        {maskSecret(secret)}
+      </code>
+      <button
+        onClick={copy}
+        className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+      >
+        {copied ? '已复制' : '复制'}
       </button>
     </div>
   );
@@ -151,11 +193,14 @@ export default function PublishKeysPage() {
           <p className="text-xs mt-1">创建一个 Key 用于 CI/CD 自动发布</p>
         </div>
       ) : (
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <table className="w-full">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          <table className="w-full min-w-[980px]">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-2 px-4">名称</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-2 px-4">Key</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-2 px-4">创建时间</th>
+                <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-2 px-4">最后使用时间</th>
                 <th className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-2 px-4">状态</th>
                 <th />
               </tr>
@@ -166,9 +211,17 @@ export default function PublishKeysPage() {
                   <td className="py-3 px-4">
                     <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{k.name}</div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                      {k.publisher} · 创建于 {new Date(k.createdAt).toLocaleDateString()}
-                      {k.lastUsedAt && ` · 最近使用 ${new Date(k.lastUsedAt).toLocaleDateString()}`}
+                      {k.publisher}
                     </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <CopyKeyButton secret={k.secret} />
+                  </td>
+                  <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {formatDateTime(k.createdAt)}
+                  </td>
+                  <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {formatDateTime(k.lastUsedAt)}
                   </td>
                   <td className="py-3 px-4 text-sm">
                     {k.revokedAt ? (

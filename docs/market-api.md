@@ -182,6 +182,40 @@ Requires auth. Revokes the current token and returns a new token.
 
 All publisher endpoints require auth.
 
+### POST /publisher/publish-keys
+
+Creates a Publish Key for automated publishing. The caller must be able to publish for the requested publisher.
+
+Request:
+
+```json
+{
+  "name": "GitHub Actions",
+  "publisher": "alice",
+  "expiresAt": "2026-12-31T00:00:00.000Z"
+}
+```
+
+`expiresAt` is optional.
+
+Response matches `marketPublishKeyResponseSchema`. The `secret` field is returned and can be copied again later by the owning publisher or an admin.
+
+### GET /publisher/publish-keys
+
+Query:
+
+```text
+publisher?: string
+```
+
+Returns Publish Keys accessible to the current user, including their `secret` values when available. Older keys created before secret persistence may not include `secret`.
+
+### POST /publisher/publish-keys/{keyId}/revoke
+
+Revokes a Publish Key accessible to the current user.
+
+Response matches `marketPublishKeyResponseSchema`.
+
 ### POST /publisher/submissions
 
 Uploads a package and creates a draft submission.
